@@ -1,0 +1,324 @@
+#!/boot/system/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 04.04.2018
+REM Lelldorin
+
+ready_to_compile=1
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/projects/yab/2Monsters"
+endif
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+WINDOW OPEN screenWidth/2-200,screenHeight/2-200 to screenWidth/2+200,screenHeight/2+200, "2M", "2Monsters2"
+	WINDOW SET "2M",  "Flags", "Not-Resizable,Not-Zoomable"
+	
+	VIEW 0,0 TO 400,400, "2M1","2M"
+			DRAW SET "BGColor", 0,0,0, "2M1"
+			CANVAS 0,0 to 400,400, "Canvas", "2M1"
+			bitmap 34,34, "tree"
+				err = draw image 0,0 to 34,34, ProgramFolder$+"/tree.png", "tree"		
+			bitmap 34,34, "gras"
+				err = draw image 0,0 to 34,34, ProgramFolder$+"/gras.bmp", "gras"
+			bitmap 34,34, "m1"
+				err = draw image 0,0 to 34,34, ProgramFolder$+"/m1.png", "m1"
+			bitmap 34,34, "m2"
+				err = draw image 0,0 to 34,34, ProgramFolder$+"/m2.gif", "m2"				
+			bitmap 34,34, "m3"
+				err = draw image 0,0 to 34,34, ProgramFolder$+"/m3.png", "m3"
+				
+			dim Playground$(10,10)
+				x=0
+				lines=1
+				for i = 1 to 10
+					if(lines=1)then
+						draw bitmap x*34,lines*34, "gras", "copy", "Canvas"
+						draw bitmap x*34,lines*34, "tree", "alpha", "Canvas"
+						Playground$(x,lines)="tree"
+						x=x+1
+						if(i=10)then
+							i=0
+							x=0
+							lines=lines+1
+							if(lines=10)then
+								break
+							endif
+						endif
+					elseif(x=0)then
+						draw bitmap x*34,lines*34, "gras", "copy", "Canvas"
+						draw bitmap x*34,lines*34, "tree", "alpha", "Canvas"
+						Playground$(x,lines)="tree"
+						x=x+1
+						if(i=10)then
+							i=0
+							x=0
+							lines=lines+1
+							if(lines=10)then
+								break
+							endif
+						endif
+					elseif(x=9)then
+						draw bitmap x*34,lines*34, "gras", "copy", "Canvas"
+						draw bitmap x*34,lines*34, "tree", "alpha", "Canvas"
+						Playground$(x,lines)="tree"
+						x=x+1
+						if(i=10)then
+							i=0
+							x=0
+							lines=lines+1
+							if(lines=10)then
+								break
+							endif
+						endif
+					elseif(lines=9)then
+						draw bitmap x*34,lines*34, "gras", "copy", "Canvas"
+						draw bitmap x*34,lines*34, "tree", "alpha", "Canvas"
+						Playground$(x,lines)="tree"
+						x=x+1
+						if(i=10)then
+							i=0
+							x=0
+							lines=lines+1
+							if(lines=10)then
+								break
+							endif
+						endif
+					else
+						Playground$(x,lines)="gras"
+						draw bitmap x*34,lines*34, "gras", "copy", "Canvas"
+						x=x+1
+						if(i=10)then
+							i=0
+							x=0
+							lines=lines+1
+							if(lines=10)then
+								break
+							endif
+						endif
+					endif
+				next i
+				Playground$(4,4)="m1"
+				m1a=4
+				m1b=4
+				Playground$(7,7)="m2"
+				m2a=7
+				m2b=7
+				Playground$(2,4)="m3"
+				m3a=2
+				m3b=4
+					
+//Main Loop
+dim part$(1)
+inloop = true
+while(inloop)
+
+	OPTION SET "2M1", "Focus", 1
+	keymsg$ = keyboard message$("2M1")
+	//print keymsg$ 
+		
+	if(keymsg$<>"" and keymsgs$<>old_keymsg$) then 
+		old_keymsg$ = keymsg$
+	endif
+	
+	switch(keymsg$)
+			
+		//player move cases				
+	
+	default:
+		
+		break
+
+		
+	end switch
+
+	msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "") print msg$
+	
+	switch msg$
+	
+	//normal messages
+	
+	case "2M:_QuitRequested|"
+		WINDOW CLOSE "2M"
+		break
+	
+	
+	
+	default:
+	
+	wert1=ran(8)
+	m1ao=m1a
+	m1bo=m1b
+		if(left$(str$(wert1), 1)="2")then
+			m1a=m1a+1
+		elseif(left$(str$(wert1),1)="1")then
+			m1a=m1a+1
+		elseif(left$(str$(wert1), 1)="4")then
+			m1a=m1a-1
+		elseif(left$(str$(wert1), 1)="3")then
+			m1a=m1a-1
+		elseif(left$(str$(wert1), 1)="5")then
+			m1b=m1b+1
+		elseif(left$(str$(wert1),1)="7")then
+			m1b=m1b+1
+		elseif(left$(str$(wert1), 1)="6")then
+			m1b=m1b-1
+		elseif(left$(str$(wert1), 1)="8")then
+			m1b=m1b-1
+		endif
+	
+	wert2=ran(8)
+	m2ao=m2a
+	m2bo=m2b	
+		if(left$(str$(wert2),1 )="2")then
+			m2a=m2a+1
+		elseif(left$(str$(wert2), 1)="1")then
+			m2a=m2a+1
+		elseif(left$(str$(wert2), 1)="4")then
+			m2a=m2a-1
+		elseif(left$(str$(wert2), 1)="3")then
+			m2a=m2a-1
+		elseif(left$(str$(wert2),1 )="6")then
+			m2b=m2b+1
+		elseif(left$(str$(wert2), 1)="5")then
+			m2b=m2b+1
+		elseif(left$(str$(wert2), 1)="8")then
+			m2b=m2b-1
+		elseif(left$(str$(wert2), 1)="7")then
+			m2b=m2b-1
+		endif
+	
+	wert3=ran(8)
+	m3ao=m3a
+	m3bo=m3b	
+		if(left$(str$(wert3),1 )="2")then
+			m3a=m3a+1
+		elseif(left$(str$(wert3), 1)="1")then
+			m3a=m3a+1
+		elseif(left$(str$(wert3), 1)="4")then
+			m3a=m3a-1
+		elseif(left$(str$(wert3), 1)="3")then
+			m3a=m3a-1
+		elseif(left$(str$(wert3),1 )="6")then
+			m3b=m3b+1
+		elseif(left$(str$(wert3), 1)="5")then
+			m3b=m3b+1
+		elseif(left$(str$(wert3), 1)="8")then
+			m3b=m3b-1
+		elseif(left$(str$(wert3), 1)="7")then
+			m3b=m3b-1
+		endif
+	
+	
+	//			Tree							Monster 2				Monster 2 alt				Monster 2				Monster 2 alt					Monster 3				MOnster 3 alt					Monster 3				Monster 3 alt
+	//if(Playground$(m1a,m1b)="tree" or Playground$(m1a,m1b)="m2" or Playground$(m1ao,m1bo)="m2" or (m1a=m2a and m1b=m2b) or  (m1a=m2ao and m1b=m2bo)  or (m1a=m3a and m1b=m3b) or  (m1a=m3ao and m1b=m3bo)  or (m1a=m3a and m1b=m3b) or  (m1a=m3ao and m1b=m3bo))then
+	if(Playground$(m1a,m1b)="tree" or (m1a=m2a and m1b=m2b) or  (m1a=m2ao and m1b=m2bo)  or (m1a=m3a and m1b=m3b) or  (m1a=m3ao and m1b=m3bo)  or (m1a=m3a and m1b=m3b) or  (m1a=m3ao and m1b=m3bo))then
+		print "m1"
+		if(Playground$(m1a,m1b)="m2")then
+			m1a=m1ao
+			m1b=m1bo
+			m2a=m2ao
+			m2b=m2bo	
+			print "collision M1 mit M2" 
+		elseif(Playground$(m1a,m1b)="m3")then
+			m1a=m1ao
+			m1b=m1bo
+			m3a=m3ao
+			m3b=m3bo
+			print "collision M1 mit M3"
+		else		
+			m1a=m1ao
+			m1b=m1bo
+			print "coll"
+		endif
+	else
+		draw bitmap m1ao*34,m1bo*34, "gras", "copy", "Canvas"
+		draw bitmap m1a*34,m1b*34, "m1", "alpha", "Canvas"
+	endif
+	
+	wait 0.2
+
+	//			Tree							Monster 1				Monster 1 alt			                                                                                                                                 	Monster 1				Monster 1 alt					Monster 3				MOnster 3  alt					Monster 3				Monster 3 a
+	//if(Playground$(m2a,m2b)="tree" or Playground$(m2a,m2b)="m1" or Playground$(m2ao,m2bo)="m1"  or Playground$(m2a,m2b)="m3" or Playground$(m2ao,m2bo)="m3"  or  (m2a=m1a and m2b=m1b) or (m2a=m1ao and m2b=m1bo)  or (m2a=m3a and m2b=m3b) or  (m2a=m3ao and m2b=m3bo)  or (m2a=m3a and m2b=m3b) or  (m2a=m3ao and m2b=m3bo))then
+	if(Playground$(m2a,m2b)="tree" or  (m2a=m1a and m2b=m1b) or (m2a=m1ao and m2b=m1bo)  or (m2a=m3a and m2b=m3b) or  (m2a=m3ao and m2b=m3bo)  or (m2a=m3a and m2b=m3b) or  (m2a=m3ao and m2b=m3bo))then
+		print "m2"
+		if(Playground$(m2a,m2b)="m1")then
+			m2a=m2ao
+			m2b=m2bo		
+			m1a=m1ao
+			m1b=m1bo	
+			  print "collision M2 mit M1"	
+		elseif(Playground$(m2a,m2b)="m3")then
+			m2a=m2ao
+			m2b=m2bo
+			m3a=m3ao
+			m3b=m3bo
+			print "collision M2 mit M3"
+		else		
+			m2a=m2ao
+			m2b=m2bo
+			print "coll"
+		endif
+	else
+		draw bitmap m2ao*34,m2bo*34, "gras", "copy", "Canvas"
+		draw bitmap m2a*34,m2b*34, "m2", "alpha", "Canvas"
+	endif
+	
+	wait 0.2
+		
+	//			Tree							Monster 1				Monster 1 alt																	Monster 1				Monster 1 alt					Monster 2				MOnster 2  alt					Monster 2				Monster 2 a
+	//if(Playground$(m3a,m3b)="tree" or Playground$(m3a,m3b)="m1" or Playground$(m3ao,m3bo)="m1"  or Playground$(m3a,m3b)="m2" or Playground$(m3ao,m3bo)="m2" or  (m3a=m1a and m3b=m1b) or (m3a=m1ao and m3b=m1bo)  or (m3a=m2a and m3b=m2b) or  (m3a=m2ao and m3b=m2bo)  or (m3a=m2a and m3b=m2b) or  (m3a=m2ao and m3b=m2bo) )then
+	if(Playground$(m3a,m3b)="tree" or  (m3a=m1a and m3b=m1b) or (m3a=m1ao and m3b=m1bo)  or (m3a=m2a and m3b=m2b) or  (m3a=m2ao and m3b=m2bo)  or (m3a=m2a and m3b=m2b) or  (m3a=m2ao and m3b=m2bo) )then
+		print "m3"
+		if(Playground$(m3a,m3b)="m1")then
+			m3a=m3ao
+			m3b=m3bo
+			m1a=m1ao
+			m1b=m1bo	
+			print "collision M3 mit M1"	
+		elseif(Playground$(m3a,m3b)="m3")then
+			m3a=m3ao
+			m3b=m3bo
+			m2a=m2ao
+			m2b=m2bo
+			print "collision M3 mit M2"
+		else		
+			m3a=m3ao
+			m3b=m3bo
+			print "coll"
+		endif
+	else
+		draw bitmap m3ao*34,m3bo*34, "gras", "copy", "Canvas"
+		draw bitmap m3a*34,m3b*34, "m3", "alpha", "Canvas"
+	endif
+	
+	wait 0.2
+	
+	
+	
+	
+	
+	
+	
+	end switch
+	
+		
+	if(window count<1) inloop = false
+	sleep 0.05
+wend

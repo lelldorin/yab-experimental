@@ -1,0 +1,294 @@
+#!/boot/system/bin/yab
+
+ProgramFolder$="/SharedBFS/projects/yab/JumpNRun"
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+BitmapSetUp()
+
+x1=250
+x2=250
+
+
+WINDOW OPEN screenWidth/2-290,screenHeight/2-290 to screenWidth/2+290,screenHeight/2+290, "JumpNRun", "Jump'n'Run"
+	WINDOW SET "JumpNRun",  "Flags", "Not-Resizable,Not-Zoomable"
+	
+	STACKVIEW 0,0 TO 580,580, "ViewStack", 8, "JumpNRun"
+		STACKVIEW SET "ViewStack", 3
+	//Stack 1 Loading
+	
+	//Stack 2 Menu
+	
+	
+	//Stack 3 Playground
+		VIEW 0,0 TO 580,580, "ViewPlayground","ViewStack3"
+			DRAW SET "BGColor", 0,0,0, "ViewPlayground"
+			CANVAS 0,0 to 580,580, "Canvas", "ViewPlayground"
+	
+			draw bitmap 250,250, "player_right", "alpha", "Canvas"
+			DRAW LINE 20,251+66 TO 570,251+66, "Canvas"
+			playerstatus$="r"
+			
+			DRAW SET "HighColor", 255,255,255, "Canvas"
+			
+		
+		playermove=0
+		jumpinghight=0
+		jumpOK=0
+		MoveForward=5
+			
+	//Stack 4 Dead
+	
+	
+	//Stack 5 Won
+	
+	
+	//Stack 6 Highscore
+	
+	//Stack 7 Description
+	
+	
+
+	
+	
+	
+//Main Loop
+dim part$(1)
+inloop = true
+while(inloop)
+	 msg$ = message$
+        if (split(msg$, part$(), ":|") > 2) then
+                PartOne$=part$(1)
+                PartTwo$ = part$(2)
+                PartThree$ = part$(3)
+        fi
+        if (split(msg$, part$(), ":|") > 3) then
+                PartFour$ = part$(4)
+        fi
+        if (split(msg$, part$(), ":|") > 4) then
+                PartFife$ = part$(5)
+        fi
+        if (msg$ <> "") print msg$
+        
+        switch msg$
+        
+       case "JumpNRun:_QuitRequested|"
+		WINDOW CLOSE "JumpNRun"	
+		break
+        
+         default:
+        break
+        end switch
+
+        
+        if(window count<1) inloop = false
+        
+        
+
+	OPTION SET "JumpNRun", "Focus", 1
+	keymsg$ = keyboard message$("JumpNRun")
+	print keymsg$ 
+		
+	if(keymsg$<>"" and keymsgs$<>old_keymsg$) then 
+		old_keymsg$ = keymsg$
+		
+	endif
+	switch(keymsg$)
+	
+	//Cases here
+	
+	case "s"	//run right$
+		playerstatus$="right"
+		DRAW RECT x1-1,x2 TO x1+66,x2+66, "Canvas"
+		if(playermove=0)then
+			if(x2<250)then
+				x2=x2+5
+			endif
+			x1=x1+MoveForward
+			DRAW BITMAP x1,x2, "player_rightrun", "alpha", "Canvas"
+			playermove=1
+		elseif(playermove=1)then
+			if(x2<250)then
+				x2=x2+5
+				jumpOK=1
+			endif
+			x1=x1+MoveForward
+			DRAW BITMAP x1,x2, "player_right", "alpha", "Canvas"
+			playermove=0
+		endif
+		break
+	
+	case "a"			//run left
+		playerstatus$="left"
+		DRAW RECT x1+1,x2 TO x1+66,x2+66, "Canvas"
+		if(playermove=0)then
+			if(x2<250)then
+				x2=x2+5
+				jumpOK=1
+			else
+				jumpOK=0
+			endif
+			x1=x1-2
+			DRAW BITMAP x1,x2, "player_leftrun", "alpha", "Canvas"
+			playermove=1
+		elseif(playermove=1)then
+			if(x2<250)then
+				x2=x2+5
+				jumpOK=1
+			else
+				jumpOK=0
+			endif
+			x1=x1-2
+			DRAW BITMAP x1,x2, "player_left", "alpha", "Canvas"
+			playermove=0
+		endif
+		break
+	
+	case "w"			//jump
+		if(playerstatus$="jumping_right" or playerstatus$="right")then
+			print playerstatus$
+			DRAW RECT x1-MoveForward, x2 TO x1-MoveForward+66,x2+66, "Canvas"
+		elseif(playerstatus$="jumping_left" or playerstatus$="left")then
+			print playerstatus$
+			DRAW RECT x1-MoveForward, x2-2 TO x1-MoveForward+66,x2+66, "Canvas"
+		endif
+		if(x2=250)then
+			jumpOK=0
+		else
+		endif
+		if(jumpOK=0)then
+			if(playerstatus$="left")then
+				playerstatus$="jumping_left"
+				jumpinghight=10
+			elseif(playerstatus$="right")then
+				playerstatus$="jumping_right"
+				jumpinghight=10
+			endif
+			if(playerstatus$="jumping_left")then
+				print jumpinghight
+				if(jumpinghight>=6)then
+					print "in here"
+					jumpinghight=jumpinghight-1
+					x1=x1-MoveForward
+					x2=x2-5
+					draw bitmap x1,x2, "player_leftjump", "alpha", "Canvas"
+				elseif(jumpinghight>0 and jumpinghight<6)then
+					x1=x1-MoveForward
+					x2=x2+5
+					draw bitmap x1,x2, "player_leftjump", "alpha", "Canvas"
+					jumpinghight=jumpinghight-1
+				elseif(jumpinghight=0)then
+					draw bitmap x1,x2, "player_left", "alpha", "Canvas"
+					playerstatus$="left"
+				endif	
+			elseif(playerstatus$="jumping_right")then
+				if(jumpinghight>=6)then
+					jumpinghight=jumpinghight-1
+					print jumpinghight
+					x1=x1+MoveForward
+					x2=x2-5
+					draw bitmap x1,x2, "player_rightjump", "alpha", "Canvas"
+				elseif(jumpinghight>0 and jumpinghight<6)then
+					x1=x1+MoveForward
+					x2=x2+5
+					draw bitmap x1,x2, "player_rightjump", "alpha", "Canvas"
+					jumpinghight=jumpinghight-1
+				elseif(jumpinghight=0)then
+					draw bitmap x1,x2, "player_right", "alpha", "Canvas"
+					playerstatus$="right"
+				endif					
+			endif
+			oldx1=x1
+			oldx2=x2
+		else
+			print "stop jump"
+			print playerstatus$
+			
+			
+			if(playerstatus$="jumping_right" or playerstatus$="right")then
+				print playerstatus$
+				DRAW RECT x1-MoveForward, x2-2 TO x1-MoveForward+66,x2+66, "Canvas"
+			elseif(playerstatus$="jumping_left" or playerstatus$="left")then
+				print playerstatus$
+				DRAW RECT x1-MoveForward, x2-2 TO x1-MoveForward+66,x2+66, "Canvas"
+			endif
+			if(x2<250)then
+				x2=x2+5
+			else
+				x2=250
+			endif
+			if(playerstatus$="jumping_right" or playerstatus$="right")then
+				draw bitmap x1,x2, "player_right", "alpha", "Canvas"
+			elseif(playerstatus$="jumping_left" or playerstatus$="left")then
+				draw bitmap x1,x2, "player_left", "alpha", "Canvas"
+			endif
+		endif
+		break
+
+		
+	default:	
+	
+	end switch
+	
+	
+	if(playerstatus$="jumping_left" or playerstatus$="jumping_right")then
+		if(keymsg$="w" or keymsg$="a" or keymsg$="s")then
+			print "moving"
+		else
+			print "user move not"
+			if(x2<250)then
+				x2=x2+5
+			endif
+			if(playerstatus$="jumping_right" or playerstatus$="right")then
+				DRAW RECT x1-MoveForward, x2-5 TO x1-MoveForward+66,x2+66, "Canvas"
+				draw bitmap x1,x2, "player_right", "alpha", "Canvas"
+			elseif(playerstatus$="jumping_left" or playerstatus$="left")then
+				DRAW RECT x1-MoveForward, x2-5 TO x1-MoveForward+66,x2+66, "Canvas"
+				draw bitmap x1,x2, "player_left", "alpha", "Canvas"
+			endif
+		endif
+
+		
+	endif
+		
+	msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "") //print msg$
+	
+	switch msg$
+	
+	//Cases here
+	
+	default:
+	
+	end switch
+	
+	wait 0.05	
+	
+	if(window count<1) inloop = false
+	sleep 0.05
+wend
+
+
+SUB BitmapSetUp()
+	bitmap 66,66, "player_left"
+		err = draw image 0,0 to 66,66, ProgramFolder$+"/data/gfx/Figur_l.bmp", "player_left"
+	bitmap 66,66, "player_leftrun"
+		err = draw image 0,0 to 66,66, ProgramFolder$+"/data/gfx/Figur_lr.bmp", "player_leftrun"
+	bitmap 66,66, "player_leftjump"
+		err = draw image 0,0 to 66,66, ProgramFolder$+"/data/gfx/Figur_lrj.bmp", "player_leftjump"
+	bitmap 66,66, "player_right"
+		err = draw image 0,0 to 66,66, ProgramFolder$+"/data/gfx/Figur_r.bmp", "player_right"
+	bitmap 66,66, "player_rightrun"
+		err = draw image 0,0 to 66,66, ProgramFolder$+"/data/gfx/Figur_rr.bmp", "player_rightrun"
+	bitmap 66,66, "player_rightjump"
+		err = draw image 0,0 to 66,66, ProgramFolder$+"/data/gfx/Figur_rrj.bmp", "player_rightjump"	
+END SUB

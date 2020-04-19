@@ -1,0 +1,1516 @@
+#!/boot/system/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 04.04.2018
+REM Release 08.05.2018
+REM Lelldorin
+
+ready_to_compile=1
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/projects/yab/ColorMe"
+endif
+
+if(IfExists("/boot/home/config/settings/ColorMe")) then
+else
+	Output$=System$("mkdir /boot/home/config/settings/ColorMe")
+endif
+
+if(IfExists("/boot/home/config/settings/ColorMe/highscore_easy.hsc")) then
+else
+	create = open("/boot/home/config/settings/ColorMe/highscore_easy.hsc", "a")
+	close(create)
+	Output$=System$("settype -t text/plain /boot/home/config/settings/ColorMe/highscore_easy.hsc")
+endif
+
+if(IfExists("/boot/home/config/settings/ColorMe/highscore_middle.hsc")) then
+else
+	create = open("/boot/home/config/settings/ColorMe/highscore_middle.hsc", "a")
+	close(create)
+	Output$=System$("settype -t text/plain /boot/home/config/settings/ColorMe/highscore_middle.hsc")
+endif
+
+if(IfExists("/boot/home/config/settings/ColorMe/highscore_hard.hsc")) then
+else
+	create = open("/boot/home/config/settings/ColorMe/highscore_hard.hsc", "a")
+	close(create)
+	Output$=System$("settype -t text/plain /boot/home/config/settings/ColorMe/highscore_hard.hsc")
+endif
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+model_position=1
+model_direction$="down"
+fieldcolor$="r"
+entername=0
+Name$=""
+
+WINDOW OPEN screenWidth/2-290,screenHeight/2-290 to screenWidth/2+290,screenHeight/2+290, "ColorMe", "ColorMe"
+	WINDOW SET "ColorMe",  "Flags", "Not-Resizable,Not-Zoomable"
+	
+	
+	STACKVIEW 0,0 TO 580,580, "ViewStack", 8, "ColorMe"
+		//Stack 1 Loading
+		VIEW 0,0 TO 580,580, "ViewLoad","ViewStack1"
+			DRAW SET "BGColor", 0,0,0, "ViewLoad"
+			//err = DRAW IMAGE 110,20, ProgramFolder$+"/data/gfx/logo1.bmp", "ViewLoad"
+			
+			//STATUSBAR 580/2-100,580/2-20 to 580/2+100,580/2+20, "SBLoad", "", "", "ViewLoad"
+						
+			BitmapSetUp()	
+
+		STACKVIEW SET "ViewStack", 2 
+		//STACKVIEW SET "ViewStack", 6
+			//Stack 1 = Loading
+			//Stack 2 = Menu
+			//Stack 3 = Game
+			//Stack 4 = Show goal color
+			//Stack 5= Game End - Enter name
+			//Stack 6 = Hightscore
+			//Stack 7 = Data 
+			//Stack 8 = About
+
+		//Stack 2 Menu
+		VIEW 0,0 TO 580,580, "ViewMenu","ViewStack2"
+			DRAW SET "BGColor", 0,0,0, "ViewMenu"
+			
+			err = DRAW IMAGE 110,20, ProgramFolder$+"/data/gfx/logo2.bmp", "ViewMenu"
+			
+			BUTTON IMAGE 580/2-180,580/2-140, "BT_Easy", ProgramFolder$+"/data/gfx/button3x3b.gif", ProgramFolder$+"/data/gfx/button3x3a.gif", Disabled$, "ViewMenu"
+			BUTTON IMAGE 580/2-180,580/2-20, "BT_Middle", ProgramFolder$+"/data/gfx/button5x5b.gif", ProgramFolder$+"/data/gfx/button5x5a.gif", Disabled$, "ViewMenu"
+			BUTTON IMAGE 580/2-180,580/2+100, "BT_Hard", ProgramFolder$+"/data/gfx/button7x7b.gif", ProgramFolder$+"/data/gfx/button7x7a.gif", Disabled$, "ViewMenu"
+			
+			
+			BUTTON IMAGE 0,529, "BT_Highscore", ProgramFolder$+"/data/gfx/colorme_highscore_b.gif", ProgramFolder$+"/data/gfx/colorme_highscore_a.gif", Disabled$, "ViewMenu"
+			BUTTON IMAGE 381,529, "BT_About", ProgramFolder$+"/data/gfx/colorme_about_b.gif", ProgramFolder$+"/data/gfx/colorme_about_a.gif", Disabled$, "ViewMenu"
+			
+		//Stack 3 Playground
+		VIEW 0,0 TO 580,580, "ViewPlayground","ViewStack3"
+			DRAW SET "BGColor", 0,0,0, "ViewPlayground"
+			CANVAS 0,0 to 580,580, "Canvas", "ViewPlayground"
+		
+		
+		//Stack 4 show color	
+		VIEW 0,0 TO 580,580, "ViewTargetColor","ViewStack4"
+			DRAW SET "BGColor", 0,0,0, "ViewTargetColor"
+		
+		
+		//Stack 5 Enter Name	
+		VIEW 0,0 TO 580,580, "ViewEnterName","ViewStack5"
+			DRAW SET "BGColor", 0,0,0, "ViewEnterName"
+			draw bitmap 580/2-60,70, "ready", "copy", "ViewEnterName"
+			VIEW 50,320 TO 530,400, "ViewNameOutput","ViewEnterName"
+				DRAW SET "BGColor", 0,100,0, "ViewNameOutput"
+				DRAW SET "LowColor", 0,100,0, "ViewNameOutput"
+				DRAW SET "HighColor", 255,255,255, "ViewNameOutput"
+				DRAW SET "Noto Sans,Regular,40", "ViewNameOutput"
+				
+				draw flush "ViewNameOutput"	
+				draw text 10,55,  "Enter your name", "ViewNameOutput"	
+		
+		//Stack 6	Highscore	
+		VIEW 0,0 TO 580,580, "Highscore","ViewStack6"
+			DRAW SET "BGColor", 0,0,0, "Highscore"
+			BUTTON IMAGE 5,5,  "BT_Menu", ProgramFolder$+"/data/gfx/colorme_menu_b.gif", ProgramFolder$+"/data/gfx/colorme_menu_a.gif", Disabled$, "Highscore"
+			
+			
+			draw bitmap 580/2-90,10, "easy", "copy", "Highscore"
+			VIEW 10,70 TO 570,190, "HSC_easy","Highscore"	
+				DRAW SET "BGColor", 0,0,0, "HSC_easy"
+				DRAW SET "LowColor", 0,100,0, "HSC_easy"
+				DRAW SET "HighColor", 255,255,255, "HSC_easy"
+				DRAW SET "Noto Sans,Regular,20", "HSC_easy"
+				
+			draw bitmap 580/2-90,200, "middle", "copy", "Highscore"
+			VIEW 10,260 TO 570,380, "HSC_middle","Highscore"	
+				DRAW SET "BGColor", 0,0,0, "HSC_middle"
+				DRAW SET "LowColor", 0,100,0, "HSC_middle"
+				DRAW SET "HighColor", 255,255,255, "HSC_middle"
+				DRAW SET "Noto Sans,Regular,20", "HSC_middle"
+			
+			draw bitmap 580/2-90,390, "hard", "copy", "Highscore"
+			VIEW 10,450 TO 570,570, "HSC_hard","Highscore"	
+				DRAW SET "BGColor", 0,0,0, "HSC_hard"
+				DRAW SET "LowColor", 0,100,0, "HSC_hard"
+				DRAW SET "HighColor", 255,255,255, "HSC_hard"
+				DRAW SET "Noto Sans,Regular,20", "HSC_hard"
+		
+		//Stack 7 Data
+		LISTBOX 5,5 TO 575,185, "LB-Data_Easy", 1,"ViewStack7"
+		LISTBOX 5,195 TO 575,375, "LB-Data_Middle", 1,"ViewStack7"
+		LISTBOX 5,385 TO 575,565, "LB-Data_Hard", 1,"ViewStack7"
+		
+		//Stack 8 About
+		DRAW SET "BGColor", 0,0,0, "ViewStack8"
+		BUTTON IMAGE 5,5,  "BT_Menu", ProgramFolder$+"/data/gfx/colorme_menu_b.gif", ProgramFolder$+"/data/gfx/colorme_menu_a.gif", Disabled$, "ViewStack8"
+		VIEW 10,70 TO 570,570, "About","ViewStack8"
+			DRAW SET "BGColor", 0,0,0, "About"
+			DRAW SET "LowColor", 0,100,0, "About"
+			DRAW SET "HighColor", 255,255,255, "About"
+			DRAW SET "Noto Sans,Regular,20", "About"
+			draw text 10,20,  "ColorMe is a simple game written in yab.", "About"	
+			draw text 10,70,  "The aim of the game is to change all the fields of the", "About"	 
+			draw text 10,97,  "playground to a color shown at the beginning.", "About"	
+			draw text 10,124, "The color changes when the game character runs on the", "About"	 
+			draw text 10, 151, "field. The color is always changed from red to green,", "About"	 
+			draw text 10, 178, "green to blue and blue to red.", "About"	 
+						
+			draw text 10,228, "The idea was created at test on the subject of game", "About"
+			draw text 10,255,  "programming with yab.", "About"
+			
+			draw text 10,305, "Have fun changing the colors.",  "About"
+			
+			draw text 10,395, "This game is dedicated to my son i love everything.",  "About"
+			
+			draw text 10,495, "2018.05.08 - Christian Albrecht (Lelldorin) ",  "About"
+//Main Loop
+dim part$(1)
+inloop = true
+while(inloop)
+
+	OPTION SET "ColorMe", "Focus", 1
+	keymsg$ = keyboard message$("ColorMe")
+	//print keymsg$ 
+		
+	if(keymsg$<>"" and keymsgs$<>old_keymsg$) then 
+		old_keymsg$ = keymsg$
+		
+	endif
+	switch(keymsg$)
+	
+			
+		case "w"
+			if(entername=1)then
+				Name$=Name$+keymsg$
+			endif	
+			draw flush "ViewNameOutput"	
+			draw text 10,55,  Name$, "ViewNameOutput"			
+		case "up"
+			clicks=clicks+1
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			model_direction$="up"
+					
+			if(Difficult$="easy")then
+				if(left$(PlayerPosition$,1)="1")then
+					WriteBitmaps()
+				else
+					Playground_Easy$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Easy$(PlayerPositionLeft-1,PlayerPositionRight)="r")then
+						fieldcolor$="g"
+						Playground_Easy$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+						
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft-1,PlayerPositionRight)="g")then
+						fieldcolor$="b"
+						Playground_Easy$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft-1,PlayerPositionRight)="b")then
+						fieldcolor$="r"
+						Playground_Easy$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+						
+					endif
+				endif
+			elseif(Difficult$="middle")then
+				if(left$(PlayerPosition$,1)="1")then
+					WriteBitmaps()
+				else
+					Playground_Middle$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Middle$(PlayerPositionLeft-1,PlayerPositionRight)="r")then
+						fieldcolor$="g"
+						Playground_Middle$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft-1,PlayerPositionRight)="g")then
+						fieldcolor$="b"
+						Playground_Middle$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft-1,PlayerPositionRight)="b")then
+						fieldcolor$="r"
+						Playground_Middle$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+				
+						WriteBitmaps()
+					endif
+				endif			
+			elseif(Difficult$="hard")then
+				if(left$(PlayerPosition$,1)="1")then
+					WriteBitmaps()
+				else
+					Playground_Hard$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Hard$(PlayerPositionLeft-1,PlayerPositionRight)="r")then
+						fieldcolor$="g"
+						Playground_Hard$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft-1,PlayerPositionRight)="g")then	
+						fieldcolor$="b"
+						Playground_Hard$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft-1,PlayerPositionRight)="b")then
+
+						fieldcolor$="r"
+						Playground_Hard$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					endif
+				endif	
+			endif
+			CheckReadyColor()
+			break
+	
+		case "a"	
+			if(entername=1)then
+				Name$=Name$+keymsg$
+			endif	
+			draw flush "ViewNameOutput"	
+			draw text 10,55,  Name$, "ViewNameOutput"	
+		case "left"
+			clicks=clicks+1
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			model_direction$="left"
+		
+			if(Difficult$="easy")then
+				if(right$(PlayerPosition$,1)="1")then
+					WriteBitmaps()
+				else
+					Playground_Easy$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Easy$(PlayerPositionLeft,PlayerPositionRight-1)="r")then
+						fieldcolor$="g"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft,PlayerPositionRight-1)="g")then
+						fieldcolor$="b"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft,PlayerPositionRight-1)="b")then
+						fieldcolor$="r"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					endif
+				endif
+			elseif(Difficult$="middle")then
+				if(right$(PlayerPosition$,1)="1")then
+					WriteBitmaps()
+				else
+					Playground_Middle$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Middle$(PlayerPositionLeft,PlayerPositionRight-1)="r")then
+						fieldcolor$="g"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft,PlayerPositionRight-1)="g")then
+						fieldcolor$="b"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft,PlayerPositionRight-1)="b")then
+						fieldcolor$="r"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					endif
+				endif			
+			elseif(Difficult$="hard")then
+				if(right$(PlayerPosition$,1)="1")then
+					WriteBitmaps()
+				else
+					Playground_Hard$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Hard$(PlayerPositionLeft,PlayerPositionRight-1)="r")then
+						fieldcolor$="g"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft,PlayerPositionRight-1)="g")then
+						fieldcolor$="b"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft,PlayerPositionRight-1)="b")then
+						fieldcolor$="r"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+						WriteBitmaps()
+					endif
+				endif	
+			endif
+			CheckReadyColor()
+			break
+			
+		case "s"	
+			if(entername=1)then
+				Name$=Name$+keymsg$
+			endif	
+			draw flush "ViewNameOutput"	
+			draw text 10,55,  Name$, "ViewNameOutput"				
+		case "down"
+			clicks=clicks+1
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			model_direction$="down"
+			
+			if(Difficult$="easy")then
+				if(left$(PlayerPosition$,1)="3")then
+					WriteBitmaps()
+				else
+					Playground_Easy$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="r")then
+						//PlayerPositionColor$="r"
+						//Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="g"
+						fieldcolor$="g"
+						Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+				
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="g")then
+						//PlayerPositionColor$="g"
+						//Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="b"
+						fieldcolor$="b"
+						Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="b")then
+						//PlayerPositionColor$="b"
+						//Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="r"
+						fieldcolor$="r"
+						Playground_Easy$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					endif
+				endif
+			elseif(Difficult$="middle")then
+				if(left$(PlayerPosition$,1)="5")then
+					WriteBitmaps()
+				else
+					Playground_Middle$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="r")then
+						//PlayerPositionColor$="r"
+						//Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="g"
+						fieldcolor$="g"
+						Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="g")then
+						//PlayerPositionColor$="g"
+						//Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="b"
+						fieldcolor$="b"
+						Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="b")then
+						//PlayerPositionColor$="b"
+						//Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="r"
+						fieldcolor$="r"
+						Playground_Middle$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					endif
+				endif			
+			elseif(Difficult$="hard")then
+				if(left$(PlayerPosition$,1)="7")then
+					WriteBitmaps()
+				else
+					Playground_Hard$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="r")then
+						//PlayerPositionColor$="r"
+						//Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="g"
+						fieldcolor$="g"
+						Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+				
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="g")then
+						//PlayerPositionColor$="g"
+						//Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="b"
+						fieldcolor$="b"
+						Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="b")then
+						//PlayerPositionColor$="b"
+						//Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="r"
+						fieldcolor$="r"
+						Playground_Hard$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+						WriteBitmaps()
+					endif
+				endif	
+			endif
+			CheckReadyColor()
+			break
+			
+		case "d"	
+			if(entername=1)then
+				Name$=Name$+keymsg$
+			endif	
+			draw flush "ViewNameOutput"	
+			draw text 10,55,  Name$, "ViewNameOutput"				
+		case "right"
+			clicks=clicks+1
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			model_direction$="right"
+			
+			if(Difficult$="easy")then
+				if(right$(PlayerPosition$,1)="3")then
+					WriteBitmaps()
+				else
+					Playground_Easy$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="r")then
+						PlayerPositionColor$="r"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="g"
+						fieldcolor$="g"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="g")then
+						PlayerPositionColor$="g"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="b"
+						fieldcolor$="b"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="b")then
+						PlayerPositionColor$="b"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="r"
+						fieldcolor$="r"
+						Playground_Easy$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+				
+						WriteBitmaps()
+					endif
+				endif
+			elseif(Difficult$="middle")then
+				if(right$(PlayerPosition$,1)="5")then
+					WriteBitmaps()
+				else
+					Playground_Middle$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="r")then
+						PlayerPositionColor$="r"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="g"
+						fieldcolor$="g"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="g")then
+						PlayerPositionColor$="g"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="b"
+						fieldcolor$="b"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="b")then
+						PlayerPositionColor$="b"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="r"
+						fieldcolor$="r"
+						Playground_Middle$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+						
+						WriteBitmaps()
+					endif
+				endif			
+			elseif(Difficult$="hard")then
+				if(right$(PlayerPosition$,1)="7")then
+					WriteBitmaps()
+				else
+					Playground_Hard$(PlayerPositionLeft,PlayerPositionRight)=fieldcolor$
+					if(Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="r")then
+						PlayerPositionColor$="r"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="g"
+						fieldcolor$="g"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+					
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="g")then
+						PlayerPositionColor$="g"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="b"
+						fieldcolor$="b"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+				
+						WriteBitmaps()
+					elseif(Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="b")then
+						PlayerPositionColor$="b"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="r"
+						fieldcolor$="r"
+						Playground_Hard$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+					
+						WriteBitmaps()
+					endif
+				endif	
+			endif
+			CheckReadyColor()			
+			break
+			
+			//Enter Name
+			
+			case "b"
+			case "c"
+			case "e"
+			case "f"
+			case "g"
+			case "h"
+			case "i"
+			case "j"
+			case "k"
+			case "l"
+			case "m"
+			case "n"
+			case "o"
+			case "p"
+			case "q"
+			case "r"
+			case "t"
+			case "u"
+			case "v"
+			case "x"
+			case "y"
+			case "z"
+			case "A"
+			case "B"
+			case "C"
+			case "D"
+			case "E"
+			case "F"
+			case "G"
+			case "H"
+			case "I"
+			case "J"
+			case "K"
+			case "L"
+			case "M"
+			case "N"
+			case "O"
+			case "P"
+			case "Q"
+			case "R"
+			case "S"
+			case "T"
+			case "U"
+			case "V"
+			case "W"
+			case "X"
+			case "Y"
+			case "Z"
+			case "0"
+			case "1"
+			case "2"
+			case "3"
+			case "4"
+			case "5"
+			case "6"
+			case "7"
+			case "8"
+			case "9"
+			case " "
+			case "backspace"
+				if(keymsg$="backspace")then
+					namelen=len(Name$)
+					Name$=left$(Name$, namelen-1)
+				else
+					Name$=Name$+keymsg$
+				endif	
+				draw flush "ViewNameOutput"	
+				draw text 10,55,  Name$, "ViewNameOutput"			
+				break			
+					
+					
+		case "enter"
+			entername=0
+			//clicks
+			//Difficult$
+			if(Difficult$="easy")then
+				LISTBOX ADD "LB-Data_Easy", str$(clicks)+":"+Name$
+				LISTBOX SORT  "LB-Data_Easy"
+			elseif(Difficult$="middle")then
+				LISTBOX ADD "LB-Data_Middle", str$(clicks)+":"+Name$
+				LISTBOX SORT  "LB-Data_Middle"
+			elseif(Difficult$="hard")then
+				LISTBOX ADD "LB-Data_Hard", str$(clicks)+":"+Name$
+				LISTBOX SORT  "LB-Data_Hard"
+			endif
+			WriteHighsore()
+			ReadoutHighscore()
+			STACKVIEW SET "ViewStack", 6
+			break	
+	
+	default:
+		
+		break
+
+		
+	end switch
+
+	msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "") //print msg$
+	
+	switch msg$
+	
+	case "ColorMe:_QuitRequested|"
+		WINDOW CLOSE "Check2DArray"
+		break
+		
+	case "BT_Easy|"
+		random$=str$(ran(10))
+		//print random$
+		random$=left$(random$,1)
+		//print random$
+		Difficult$="easy"
+		//if(random$="0" or random$="3"  or random$="6"  or random$="9")then
+			//ReadyColor$="red"
+			//DRAW SET "BGColor", 255,0,0, "ViewTargetColor"
+		if(random$="1" or random$="3" or random$="4"  or random$="7" or random$="9")then
+			ReadyColor$="red"
+			DRAW SET "BGColor", 255,0,0, "ViewTargetColor"
+		elseif(random$="0" or random$="2" or random$="5" or random$="6"  or random$="8")then
+			ReadyColor$="blue"
+			DRAW SET "BGColor", 0,255,255, "ViewTargetColor"
+		endif		
+		STACKVIEW SET "ViewStack", 4	
+		wait 1
+			
+		STACKVIEW SET "ViewStack", 3
+		GenerateArray()
+		WriteBitmaps()
+		CheckReadyColor()
+		break	
+		
+	case "BT_Middle|"
+		random$=str$(ran(2))
+		random$=left$(random$,1)
+		Difficult$="middle"
+		if(random$="0")then
+			ReadyColor$="red"
+			DRAW SET "BGColor", 255,0,0, "ViewTargetColor"
+		elseif(random$="1")then
+			ReadyColor$="green"
+			DRAW SET "BGColor", 0,255,0, "ViewTargetColor"
+		endif		
+		STACKVIEW SET "ViewStack", 4	
+		wait 1
+		
+		STACKVIEW SET "ViewStack", 3
+		GenerateArray()
+		WriteBitmaps()
+		break	
+		
+	case "BT_Hard|"
+		random$=str$(ran(2))
+		random$=left$(random$,1)
+		Difficult$="hard"
+		if(random$="0")then
+			ReadyColor$="green"
+			DRAW SET "BGColor", 0,255,0, "ViewTargetColor"
+		elseif(random$="1")then
+			ReadyColor$="blue"
+			DRAW SET "BGColor", 0,255,255, "ViewTargetColor"
+		endif		
+		STACKVIEW SET "ViewStack", 4	
+		wait 1
+		
+		STACKVIEW SET "ViewStack", 3
+		GenerateArray()
+		WriteBitmaps()		
+		break	
+	
+	case "BT_Menu|"
+		STACKVIEW SET "ViewStack", 2 
+		SetBack()
+		break
+	
+	case "BT_Highscore|"
+		ReadoutHighscore()	
+		STACKVIEW SET "ViewStack", 6		
+		break
+		
+	case "BT_About|"
+		STACKVIEW SET "ViewStack", 8		
+		break	
+			
+	
+	
+	default:
+	
+	end switch
+	
+	wait 0.05	
+	
+	if(window count<1) inloop = false
+	sleep 0.05
+wend
+
+SUB GenerateArray()
+	if(Difficult$="easy")then
+		readout=open(ProgramFolder$+"/data/playground_easy.field", "r")
+		endrange=3
+		dim Playground_Easy$(3,3)
+	elseif(Difficult$="middle")then
+		readout=open(ProgramFolder$+"/data/playground_middle.field", "r")
+		endrange=5
+		dim Playground_Middle$(5,5)
+	elseif(Difficult$="hard")then
+		readout=open(ProgramFolder$+"/data/playground_hard.field", "r")
+		endrange=7
+		dim Playground_Hard$(7,7)		
+	endif
+		//print Difficult$+":"+str$(endrange)
+		x=0
+		i=0
+		lines=1
+		while (not EOF(readout))
+			x=x+1
+			y=y+1
+			dim Playground_file$(x)
+			line input #readout b$
+			Playground_file$(x)=b$
+			dim elements$(1)
+				numElements = split(Playground_file$(x), elements$(),":\n")
+				for i = 1 to endrange
+					//print "i:"+str$(i)
+					if(Difficult$="easy")then
+						Playground_Easy$(lines,i)=elements$(i)
+					elseif(Difficult$="middle")then
+						Playground_Middle$(lines,i)=elements$(i)
+					elseif(Difficult$="hard")then
+						Playground_Hard$(lines,i)=elements$(i)
+					endif	
+					
+					
+					if(i=endrange)then
+						lines=lines+1
+						//print "lines:"+str$(lines)
+					endif
+				next i
+			wend			
+		close(readout)
+END SUB
+
+SUB WriteBitmaps()
+	local i
+	local x
+	local lines
+	local xline
+	local endofread
+	local factor
+	i=0
+	x=0
+	lines=1
+	xline=0
+	endofread=1
+	factor=0
+	for i = 1 to endrange
+		x=x+1
+		if(endofread=endrange+1)then
+			break
+		else
+			if(endrange=3)then
+				if(i=1)then
+					factor=0
+				elseif(i=2)then
+					factor=1	
+				elseif(i=3)then
+					factor=2	
+				endif
+			elseif(endrange=5)then
+				if(i=1)then
+					factor=0
+				elseif(i=2)then
+					factor=1	
+				elseif(i=3)then
+					factor=2	
+				elseif(i=4)then
+					factor=3	
+				elseif(i=5)then
+					factor=4	
+				endif
+			elseif(endrange=7)then
+				if(i=1)then
+					factor=0
+				elseif(i=2)then
+					factor=1	
+				elseif(i=3)then
+					factor=2	
+				elseif(i=4)then
+					factor=3	
+				elseif(i=5)then
+					factor=4	
+				elseif(i=6)then
+					factor=5	
+				elseif(i=7)then
+					factor=6	
+				endif
+			endif		
+			
+			if(Difficult$="easy")then
+				if(Playground_Easy$(lines,x)="p")then
+					if(fieldcolor$="r")then
+						draw bitmap 193*factor,193*xline, "red1", "copy", "Canvas"
+					elseif(fieldcolor$="g")then
+						draw bitmap 193*factor,193*xline, "green1", "copy", "Canvas"
+					elseif(fieldcolor$="b")then
+						draw bitmap 193*factor,193*xline, "blue1", "copy", "Canvas"
+					endif
+
+					if(model_direction$="up")then
+						if(model_position=1)then
+							draw bitmap 193*factor,193*xline, "player_back21", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 193*factor,193*xline, "player_back11", "alpha", "Canvas"
+						endif
+					elseif(model_direction$="left")then
+						if(model_position=1)then
+							draw bitmap 193*factor,193*xline, "player_left21", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 193*factor,193*xline, "player_left11", "alpha", "Canvas"
+						endif
+					elseif(model_direction$="down")then
+						if(model_position=1)then
+							draw bitmap 193*factor,193*xline, "player_front21", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 193*factor,193*xline, "player_front11", "alpha", "Canvas"
+						endif	
+					elseif(model_direction$="right")then
+						if(model_position=1)then
+							draw bitmap 193*factor,193*xline, "player_right21", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 193*factor,193*xline, "player_right11", "alpha", "Canvas"
+						endif
+					endif	
+					if(model_position=1)then
+						model_position=2
+					else
+						model_position=1
+					endif	
+					
+					PlayerPosition$=str$(lines)+":"+str$(x)
+				endif
+				if(Playground_Easy$(lines,x)="r")then
+					draw bitmap 193*factor,193*xline, "red1", "copy", "Canvas"
+				endif
+				if(Playground_Easy$(lines,x)="g")then
+					draw bitmap 193*factor,193*xline, "green1", "copy", "Canvas"
+				endif
+				if(Playground_Easy$(lines,x)="b")then
+					draw bitmap 193*factor,193*xline, "blue1", "copy", "Canvas"
+				endif
+				if(x=3)then
+					x=0
+					i=0
+				    	xline=xline+1
+				    	if(lines=3)then
+			    		else
+						lines=lines+1
+					endif
+					endofread=endofread+1	
+				endif	
+			elseif(Difficult$="middle")then
+				if(Playground_Middle$(lines,x)="p")then
+					if(fieldcolor$="r")then
+						draw bitmap 116*factor,116*xline, "red2", "copy", "Canvas"
+					elseif(fieldcolor$="g")then
+						draw bitmap 116*factor,116*xline, "green2", "copy", "Canvas"
+					elseif(fieldcolor$="b")then
+						draw bitmap 116*factor,116*xline, "blue2", "copy", "Canvas"
+					endif
+	
+					if(model_direction$="up")then
+						if(model_position=1)then
+							draw bitmap 116*factor,116*xline, "player_back22", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 116*factor,116*xline, "player_back12", "alpha", "Canvas"
+						endif
+					elseif(model_direction$="left")then
+						if(model_position=1)then
+							draw bitmap 116*factor,116*xline, "player_left22", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 116*factor,116*xline, "player_left12", "alpha", "Canvas"
+						endif
+					elseif(model_direction$="down")then
+						if(model_position=1)then
+							draw bitmap 116*factor,116*xline, "player_front22", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 116*factor,116*xline, "player_front12", "alpha", "Canvas"
+						endif	
+					elseif(model_direction$="right")then
+						if(model_position=1)then
+							draw bitmap 116*factor,116*xline, "player_right22", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 116*factor,116*xline, "player_right12", "alpha", "Canvas"
+						endif
+					endif	
+					if(model_position=1)then
+						model_position=2
+					else
+						model_position=1
+					endif	
+						
+					PlayerPosition$=str$(lines)+":"+str$(x)
+				endif
+				if(Playground_Middle$(lines,x)="r")then
+					draw bitmap 116*factor,116*xline, "red2", "copy", "Canvas"
+				endif
+				if(Playground_Middle$(lines,x)="g")then
+					draw bitmap 116*factor,116*xline, "green2", "copy", "Canvas"
+				endif
+				if(Playground_Middle$(lines,x)="b")then
+					draw bitmap 116*factor,116*xline, "blue2", "copy", "Canvas"
+				endif
+				if(x=5)then
+					x=0
+					i=0
+				    	xline=xline+1
+				    	if(lines=5)then
+				    	else
+						lines=lines+1
+					endif
+					endofread=endofread+1	
+				endif	
+			elseif(Difficult$="hard")then
+				if(Playground_Hard$(lines,x)="p")then
+					if(fieldcolor$="r")then
+						draw bitmap 83*factor,83*xline, "red3", "copy", "Canvas"
+					elseif(fieldcolor$="g")then
+						draw bitmap 83*factor,83*xline, "green3", "copy", "Canvas"
+					elseif(fieldcolor$="b")then
+						draw bitmap 83*factor,83*xline, "blue3", "copy", "Canvas"
+					endif
+	
+					if(model_direction$="up")then
+						if(model_position=1)then
+							draw bitmap 83*factor,83*xline, "player_back23", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 83*factor,83*xline, "player_back13", "alpha", "Canvas"
+						endif
+					elseif(model_direction$="left")then
+						if(model_position=1)then
+							draw bitmap 83*factor,83*xline, "player_left23", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 83*factor,83*xline, "player_left13", "alpha", "Canvas"
+						endif
+					elseif(model_direction$="down")then
+						if(model_position=1)then
+							draw bitmap 83*factor,83*xline, "player_front23", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 83*factor,83*xline, "player_front13", "alpha", "Canvas"
+						endif	
+					elseif(model_direction$="right")then
+						if(model_position=1)then
+							draw bitmap 83*factor,83*xline, "player_right23", "alpha", "Canvas"
+						elseif(model_position=2)then
+							draw bitmap 83*factor,83*xline, "player_right13", "alpha", "Canvas"
+						endif
+					endif	
+					if(model_position=1)then
+						model_position=2
+					else
+						model_position=1
+					endif	
+					
+					PlayerPosition$=str$(lines)+":"+str$(x)
+				endif
+				if(Playground_Hard$(lines,x)="r")then
+					draw bitmap 83*factor,83*xline, "red3", "copy", "Canvas"
+				endif
+				if(Playground_Hard$(lines,x)="g")then
+					draw bitmap 83*factor,83*xline, "green3", "copy", "Canvas"
+				endif
+				if(Playground_Hard$(lines,x)="b")then
+					draw bitmap 83*factor,83*xline, "blue3", "copy", "Canvas"
+				endif
+				if(x=7)then
+					x=0
+					i=0
+				    	xline=xline+1
+				    	if(lines=7)then
+				    	else
+						lines=lines+1
+					endif
+					endofread=endofread+1	
+				endif	
+			endif						
+		endif						
+	next i
+END SUB
+
+SUB CheckReadyColor()
+	if(Difficult$="easy")then
+
+	endif
+	
+	local j
+	local a
+	local b
+	local readycolor
+	
+	j=0
+	a=1
+	b=0
+	readycolor=0
+
+	if(ReadyColor$="red")then
+		rcolor$="r"
+	elseif(ReadyColor$="green")then
+		rcolor$="g"
+	elseif(ReadyColor$="blue")then
+		rcolor$="b"
+	endif
+	
+	
+	if(Difficult$="easy")then
+		for j = -1 to 9
+			b=b+1
+			if(b>3)then
+				if(a>3)then
+					break
+				else
+					b=0
+					a=a+1
+				endif
+			else
+				if(Playground_Easy$(a,b)=rcolor$)then
+					readycolor=readycolor+1
+				endif
+				if(Playground_Easy$(a,b)="p")then
+					if(trim$(fieldcolor$)=rcolor$)then
+						readycolor=readycolor+1
+					endif
+				endif
+			endif
+			if(readycolor=9)then
+				entername=1
+				STACKVIEW SET "ViewStack", 5
+			endif		
+		next j	
+	elseif(Difficult$="middle")then
+		for j = -3 to 25
+			b=b+1
+			if(b>5)then
+				if(a>5)then
+					break
+				else
+					b=0
+					a=a+1
+				endif
+			else
+				if(Playground_Middle$(a,b)=rcolor$)then
+					readycolor=readycolor+1
+				endif
+				if(Playground_Middle$(a,b)="p")then
+					if(trim$(fieldcolor$)=rcolor$)then
+						readycolor=readycolor+1
+					endif
+				endif
+			endif
+			if(readycolor=25)then
+				entername=1
+				STACKVIEW SET "ViewStack", 5
+			endif		
+		next j	
+	elseif(Difficult$="hard")then
+		for j = -5 to 49
+			b=b+1
+			if(b>7)then
+				if(a>7)then
+					break
+				else
+					b=0
+					a=a+1
+				endif
+			else
+				if(Playground_Hard$(a,b)=rcolor$)then
+					readycolor=readycolor+1
+				endif
+				if(Playground_Hard$(a,b)="p")then
+					if(trim$(fieldcolor$)=rcolor$)then
+						readycolor=readycolor+1
+					endif
+				endif
+			endif
+			if(readycolor=49)then
+				entername=1
+				STACKVIEW SET "ViewStack", 5
+			endif		
+		next j	
+	endif
+END SUB
+
+SUB BitmapSetUp()
+	//easy
+		bitmap 193,193, "red1"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/red.gif", "red1"
+		//STATUSBAR SET "SBLoad", "", "", 3
+		bitmap 193,193, "green1"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/green.gif", "green1"	
+		//STATUSBAR SET "SBLoad", "", "", 6
+		bitmap 193,193, "blue1"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/blue.gif", "blue1"
+		//STATUSBAR SET "SBLoad", "", "", 9
+		bitmap 193,193, "player_front11"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_front1.png", "player_front11"
+		//STATUSBAR SET "SBLoad", "", "", 12
+		bitmap 193,193, "player_front21"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_front2.png", "player_front21"
+		//STATUSBAR SET "SBLoad", "", "", 15
+		bitmap 193,193, "player_back11"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_back1.png", "player_back11"
+		//STATUSBAR SET "SBLoad", "", "", 18
+		bitmap 193,193, "player_back21"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_back2.png", "player_back21"
+		//STATUSBAR SET "SBLoad", "", "", 21
+		bitmap 193,193, "player_left11"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_left1.png", "player_left11"
+		//STATUSBAR SET "SBLoad", "", "", 24
+		bitmap 193,193, "player_left21"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_left2.png", "player_left21"
+		//STATUSBAR SET "SBLoad", "", "", 27
+		bitmap 193,193, "player_right11"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_right1.png", "player_right11"
+		//STATUSBAR SET "SBLoad", "", "", 30
+		bitmap 193,193, "player_right21"
+			err = draw image 0,0 to 193,193, ProgramFolder$+"/data/gfx/kira_right2.png", "player_right21"
+		//STATUSBAR SET "SBLoad", "", "", 33
+	//middle
+		bitmap 116,116, "red2"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/red.gif", "red2"
+		//STATUSBAR SET "SBLoad", "", "", 36
+		bitmap 116,116, "green2"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/green.gif", "green2"	
+		//STATUSBAR SET "SBLoad", "", "", 39	
+		bitmap 116,116, "blue2"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/blue.gif", "blue2"
+		//STATUSBAR SET "SBLoad", "", "", 42
+		bitmap 116,116, "player_front12"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_front1.png", "player_front12"
+		//STATUSBAR SET "SBLoad", "", "", 45
+		bitmap 116,116, "player_front22"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_front2.png", "player_front22"
+		//STATUSBAR SET "SBLoad", "", "", 48
+		bitmap 116,116, "player_back12"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_back1.png", "player_back12"
+		//STATUSBAR SET "SBLoad", "", "", 51
+		bitmap 116,116, "player_back22"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_back2.png", "player_back22"
+		//STATUSBAR SET "SBLoad", "", "", 54
+		bitmap 116,116, "player_left12"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_left1.png", "player_left12"	
+		//STATUSBAR SET "SBLoad", "", "", 57
+		bitmap 116,116, "player_left22"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_left2.png", "player_left22"
+		//STATUSBAR SET "SBLoad", "", "", 60
+		bitmap 116,116, "player_right12"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_right1.png", "player_right12"
+		//STATUSBAR SET "SBLoad", "", "", 63
+		bitmap 116,116, "player_right22"
+			err = draw image 0,0 to 116,116, ProgramFolder$+"/data/gfx/kira_right2.png", "player_right22"
+		//STATUSBAR SET "SBLoad", "", "", 66
+	//hard
+		bitmap 83,83, "red3"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/red.gif", "red3"
+		//STATUSBAR SET "SBLoad", "", "", 69
+		bitmap 83,83, "green3"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/green.gif", "green3"	
+		//STATUSBAR SET "SBLoad", "", "", 72
+		bitmap 83,83, "blue3"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/blue.gif", "blue3"
+		//STATUSBAR SET "SBLoad", "", "", 75
+		bitmap 83,83, "player_front13"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_front1.png", "player_front13"
+		//STATUSBAR SET "SBLoad", "", "", 78
+		bitmap 83,83, "player_front23"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_front2.png", "player_front23"
+		//STATUSBAR SET "SBLoad", "", "", 81
+		bitmap 83,83, "player_back13"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_back1.png", "player_back13"
+		//STATUSBAR SET "SBLoad", "", "", 84
+		bitmap 83,83, "player_back23"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_back2.png", "player_back23"
+		//STATUSBAR SET "SBLoad", "", "", 87
+		bitmap 83,83, "player_left13"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_left1.png", "player_left13"
+		//STATUSBAR SET "SBLoad", "", "", 90
+		bitmap 83,83, "player_left23"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_left2.png", "player_left23"
+		//STATUSBAR SET "SBLoad", "", "", 93
+		bitmap 83,83, "player_right13"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_right1.png", "player_right13"
+		//STATUSBAR SET "SBLoad", "", "", 96
+		bitmap 83,83, "player_right23"
+			err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_right2.png", "player_right23"
+		//STATUSBAR SET "SBLoad", "", "", 99
+	//Ready
+		bitmap 120,130, "ready"
+			err = draw image 0,0 to 120,130, ProgramFolder$+"/data/gfx/ready.gif", "ready"
+	//Hghscore
+		bitmap 180,50, "easy"
+			err = draw image 0,0 to 180,50, ProgramFolder$+"/data/gfx/button3x3a.gif", "easy"
+		bitmap 180,50, "middle"
+			err = draw image 0,0 to 180,50, ProgramFolder$+"/data/gfx/button5x5a.gif", "middle"
+		bitmap 180,50, "hard"
+			err = draw image 0,0 to 180,50, ProgramFolder$+"/data/gfx/button7x7a.gif", "hard"
+END SUB
+
+SUB SetBack()
+	clicks=0
+	readycolor=0
+	entername=0
+	Name$=""
+	draw flush "ViewNameOutput"	
+	draw text 10,55,  "Enter your name", "ViewNameOutput"	
+END SUB
+
+sub IfExists(filename$)
+     return not system("test -e "+filename$)
+end sub
+
+sub ReadoutHighscore()	
+	texty=27
+	textfactor=20
+	x=0
+	draw flush "HSC_easy"	
+	draw flush "HSC_middle"	
+	draw flush "HSC_hard"
+	readout=open("/boot/home/config/settings/ColorMe/highscore_easy.hsc", "r")
+		while (not EOF(readout))
+			x=x+1
+			dim OpenFile$(x)
+			line input #readout b$
+			if(b$="")then
+				b$=" "
+			endif
+			OpenFile$(x)=b$
+			dim elements$(1)
+				numElements = split(OpenFile$(x), elements$(),"\n")
+				for i = 1 to numElements
+					j=0
+					for j = 1 to numElements
+						draw text 50,texty,  elements$(i), "HSC_easy"
+						texty=texty+textfactor	
+					next j				
+				next i		
+		wend
+	close(readout)	
+	texty=27
+	textfactor=20
+	x=0
+	readout=open("/boot/home/config/settings/ColorMe/highscore_middle.hsc", "r")
+		while (not EOF(readout))
+			x=x+1
+			dim OpenFile$(x)
+			line input #readout b$
+			if(b$="")then
+				b$=" "
+			endif
+			OpenFile$(x)=b$
+			dim elements$(1)
+				numElements = split(OpenFile$(x), elements$(),"\n")
+				for i = 1 to numElements
+					j=0
+					for j = 1 to numElements
+						draw text 50,texty,  elements$(i), "HSC_middle"
+						texty=texty+textfactor	
+					next j				
+				next i			
+		wend
+	close(readout)		
+	texty=27
+	textfactor=20
+	x=0
+	readout=open("/boot/home/config/settings/ColorMe/highscore_hard.hsc", "r")
+		while (not EOF(readout))
+			x=x+1
+			dim OpenFile$(x)
+			line input #readout b$
+			if(b$="")then
+				b$=" "
+			endif
+			OpenFile$(x)=b$
+			dim elements$(1)
+				numElements = split(OpenFile$(x), elements$(),"\n")
+				for i = 1 to numElements
+					j=0
+					for j = 1 to numElements
+						draw text 50,texty,  elements$(i), "HSC_hard"
+						texty=texty+textfactor	
+					next j				
+				next i		
+		wend
+	close(readout)				
+end sub
+
+sub WriteHighsore()
+	local x
+	x=0
+	If(Name$="")then
+		Name$="Unknown"
+	endif
+	if(Difficult$="easy")then
+		writefile = open("/boot/home/config/settings/ColorMe/highscore_easy.hsc", "a")
+			print #writefile str$(clicks)+":"+Name$
+		close(writefile)
+		
+		readout=open("/boot/home/config/settings/ColorMe/highscore_easy.hsc", "r")
+		while (not EOF(readout))
+			x=x+1
+			dim OpenFile$(x)
+			line input #readout b$
+			if(b$="")then
+				b$=" "
+			endif
+			OpenFile$(x)=b$
+			dim elements$(1)
+				numElements = split(OpenFile$(x), elements$(),"\n")
+				for i = 1 to numElements
+					j=0
+					for j = 1 to numElements
+						n = LISTBOX COUNT "LB-Data_Easy"
+						if(n=0)then
+						else
+							Entry$ = LISTBOX GET$ "LB-Data_Easy", j
+							if(trim$(Entry$)=trim$(elements$(i)))then
+							else
+								LISTBOX ADD "LB-Data_Easy", elements$(i)
+							endif	
+							if(trim$(Entry$)="")then
+								LISTBOX REMOVE "LB-Data_Easy", j
+							endif
+						endif
+					next j				
+				next i
+				LISTBOX SORT "LB-Data_Easy"			
+		wend
+		close(readout)		
+		Output$=System$("rm -r /boot/home/config/settings/ColorMe/highscore_easy.hsc")
+		writefile = open("/boot/home/config/settings/ColorMe/highscore_easy.hsc", "a")
+			n = LISTBOX COUNT "LB-Data_Easy"
+			if(n=0)then
+			else
+				for i = 1 to n
+					if(i>5)then
+					else
+						Entry$ = LISTBOX GET$ "LB-Data_Easy", i
+						print #writefile Entry$
+					endif
+				next i
+			endif
+		close(readout)	
+	elseif(Difficult$="middle")then
+		writefile = open("/boot/home/config/settings/ColorMe/highscore_middle.hsc", "a")
+			print #writefile str$(clicks)+":"+Name$
+		close(writefile)
+		STACKVIEW SET "ViewStack", 7
+		
+		readout=open("/boot/home/config/settings/ColorMe/highscore_middle.hsc", "r")
+		while (not EOF(readout))
+			x=x+1
+			dim OpenFile$(x)
+			line input #readout b$
+			if(b$="")then
+				b$=" "
+			endif
+			OpenFile$(x)=b$
+			dim elements$(1)
+				numElements = split(OpenFile$(x), elements$(),"\n")
+				for i = 1 to numElements
+					j=0
+					for j = 1 to numElements
+						n = LISTBOX COUNT "LB-Data_Middle"
+						if(n=0)then
+						else
+							Entry$ = LISTBOX GET$ "LB-Data_Middle", j
+							if(trim$(Entry$)=trim$(elements$(i)))then
+							else
+								LISTBOX ADD "LB-Data_Middle", elements$(i)
+							endif	
+							if(trim$(Entry$)="")then
+								LISTBOX REMOVE "LB-Data_Middle", j
+							endif
+						endif
+					next j				
+				next i
+				LISTBOX SORT "LB-Data_Middle"			
+		wend
+		close(readout)		
+		Output$=System$("rm -r /boot/home/config/settings/ColorMe/highscore_middle.hsc")
+		writefile = open("/boot/home/config/settings/ColorMe/highscore_middle.hsc", "a")
+			n = LISTBOX COUNT "LB-Data_Middle"
+			if(n=0)then
+			else
+				for i = 1 to n
+					if(i>5)then
+					else
+						Entry$ = LISTBOX GET$ "LB-Data_Middle", i
+						print #writefile Entry$
+					endif
+				next i
+			endif
+		close(readout)	
+	elseif(Difficult$="hard")then
+		writefile = open("/boot/home/config/settings/ColorMe/highscore_hard.hsc", "a")
+			print #writefile str$(clicks)+":"+Name$
+		close(writefile)
+		STACKVIEW SET "ViewStack", 7
+		
+		readout=open("/boot/home/config/settings/ColorMe/highscore_hard.hsc", "r")
+		while (not EOF(readout))
+			x=x+1
+			dim OpenFile$(x)
+			line input #readout b$
+			if(b$="")then
+				b$=" "
+			endif
+			OpenFile$(x)=b$
+			dim elements$(1)
+				numElements = split(OpenFile$(x), elements$(),"\n")
+				for i = 1 to numElements
+					j=0
+					for j = 1 to numElements
+						n = LISTBOX COUNT "LB-Data_Hard"
+						if(n=0)then
+						else
+							Entry$ = LISTBOX GET$ "LB-Data_Hard", j
+							if(trim$(Entry$)=trim$(elements$(i)))then
+							else
+								LISTBOX ADD "LB-Data_Hard", elements$(i)
+							endif	
+							if(trim$(Entry$)="")then
+								LISTBOX REMOVE "LB-Data_Hard", j
+							endif
+						endif
+					next j				
+				next i
+				LISTBOX SORT "LB-Data_Hard"			
+		wend
+		close(readout)		
+		Output$=System$("rm -r /boot/home/config/settings/ColorMe/highscore_hard.hsc")
+		writefile = open("/boot/home/config/settings/ColorMe/highscore_hard.hsc", "a")
+			n = LISTBOX COUNT "LB-Data_Hard"
+			if(n=0)then
+			else
+				for i = 1 to n
+					if(i>5)then
+					else
+						Entry$ = LISTBOX GET$ "LB-Data_Hard", i
+						print #writefile Entry$
+					endif
+				next i
+			endif
+		close(readout)	
+	endif
+end sub

@@ -1,0 +1,254 @@
+#!/boot/system/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 01.07.2018
+REM Release 01.07.2018
+REM Lelldorin
+
+ready_to_compile=1
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/projects/yab/ColorMe"
+endif
+
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+WINDOW OPEN screenWidth/2-400,screenHeight/2-320 to screenWidth/2+400,screenHeight/2+320, "ExcapeGame", "Example Escape-Game"
+	WINDOW SET "ExcapeGame",  "Flags", "Not-Resizable,Not-Zoomable"
+		DRAW SET "BGColor", 0,0,0, "ExcapeGame"
+		DRAW SET "LowColor", 0,50,0, "ExcapeGame"
+		DRAW SET "HighColor", 255,255,255, "ExcapeGame"
+		DRAW SET "Noto Sans,Regular,20", "ExcapeGame"
+	STACKVIEW 0,0 TO 800,590, "Stack", 6, "ExcapeGame"
+		for i = 1 to 6
+			DRAW SET "BGColor", 0,0,0, "Stack"+str$(i)
+		next i
+		bitmap 800,600, "room"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/room.gif", "room"
+		bitmap 800,600, "door"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/door.gif", "door"
+		bitmap 800,600, "bed"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/bed.gif", "bed"	
+		bitmap 800,600, "bed_key"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/bed_key.gif", "bed_key"		
+		bitmap 800,600, "desk"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/desk.gif", "desk"	
+		bitmap 800,600, "desk_key"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/desk_key.gif", "desk_key"			
+		bitmap 800,600, "sideboard"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/sideboard.gif", "sideboard"	
+		bitmap 800,600, "sideboard_key"
+			err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/sideboard_key.gif", "sideboard_key"	
+		
+		err = draw image 130,100 to 670,316, ProgramFolder$+"/gfx/logo.gif", "Stack1"	
+		
+		BUTTON IMAGE 289,500, "Start",  ProgramFolder$+"/gfx/start2.gif",  ProgramFolder$+"/gfx/start1.gif", Disabled$, "Stack1"
+			
+		STACKVIEW SET "Stack", 1		
+
+//Main Loop
+dim part$(1)
+dim mouse$(1)
+inloop = true
+while(inloop)
+
+	msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "") //print msg$
+	
+	switch msg$
+	
+	case "ExcapeGame:_QuitRequested|"
+		WINDOW CLOSE "ExcapeGame"
+		break
+		
+	case "Start|"
+		draw bitmap 0,0, "room", "copy", "Stack2"	
+		draw bitmap 0,0, "desk", "copy", "Stack3"
+		draw bitmap 0,0, "sideboard", "copy", "Stack4"	
+		draw bitmap 0,0, "door", "copy", "Stack5"
+		draw bitmap 0,0, "bed", "copy", "Stack6"	
+		
+		keyplace=0
+		
+		random=ran(9)
+		if(right$(str$(random),1)="0")then
+			keyplace=1
+		elseif(right$(str$(random),1)="1")then
+			keyplace=2
+		elseif(right$(str$(random),1)="2")then
+			keyplace=3
+		elseif(right$(str$(random),1)="3")then
+			keyplace=1
+		elseif(right$(str$(random),1)="4")then
+			keyplace=2
+		elseif(right$(str$(random),1)="5")then
+			keyplace=3
+		elseif(right$(str$(random),1)="6")then
+			keyplace=1
+		elseif(right$(str$(random),1)="7")then
+			keyplace=3
+		elseif(right$(str$(random),1)="8")then
+			keyplace=2
+		elseif(right$(str$(random),1)="9")then
+			keyplace=1
+		endif
+		
+		if(keyplace=1)then
+			draw bitmap 0,0, "desk_key", "copy", "Stack3"
+		elseif(keyplace=2)then
+			draw bitmap 0,0, "sideboard_key", "copy", "Stack4"
+		elseif(keyplace=3)then
+			draw bitmap 0,0, "bed_key", "copy", "Stack6"	
+		endif
+		
+		keyfound=0
+		draw flush "ExcapeGame"	
+		draw text 10,630,  "I DOES NOT FIND MY KEY, PLEASE HELP ME!", "ExcapeGame"
+		STACKVIEW SET "Stack", 2	
+		break
+		
+			
+	
+	
+	default:
+	
+	end switch
+	
+	wait 0.05
+	
+	mmsg$ = MOUSE MESSAGE$
+	if (mmsg$<>"" and mmsg$<>old_mmsg$) then
+		//print mmsg$
+		old_mmsg$= mmsg$ 
+		nx = split(mmsg$, mouse$(), ":")
+		Viewname$=mouse$(1)
+		Xmouse	= val(mouse$(2))
+		Ymouse	= val(mouse$(3))
+		BLmouse	= val(mouse$(4))
+		BCmouse= val(mouse$(5))
+		BRmouse= val(mouse$(6))
+
+		
+		//print Xmouse
+		//print Ymouse
+	endif
+	
+	switch (casestring$)
+	
+	end switch	
+	
+	if(Viewname$="Stack2")then
+		mycolor =  BITMAP COLOR Xmouse,Ymouse, "room", "green"
+		//print mycolor
+		if(BLmouse=1)then
+			if(Xmouse>40 and Xmouse<155)then				//desk
+				//print "desk"
+				if(Ymouse>372 and Ymouse<528 and mycolor=24 or mycolor= 123)then
+					STACKVIEW SET "Stack", 3
+				endif
+			elseif(Xmouse>317 and Xmouse<440 and Ymouse>285 and Ymouse<406)then			//sideboard
+				//print "sideboard"
+				if(mycolor=0 or mycolor= 123)then
+					STACKVIEW SET "Stack", 4
+				endif
+			elseif(Xmouse>503 and Xmouse<605)then			//door
+				//print "door"
+				if(Ymouse>192 and Ymouse<380)then
+					if(mycolor=0 or mycolor= 123)then
+						STACKVIEW SET "Stack", 5
+					endif
+				endif
+			elseif(Xmouse>356 and Xmouse<683 and Ymouse>474 and Ymouse<577)then			//bed
+				if(mycolor=0 or mycolor= 123 or mycolor=230 or mycolor=255)then
+					STACKVIEW SET "Stack", 6
+				endif
+			endif
+		endif
+	elseif(Viewname$="Stack3")then
+		mycolor =  BITMAP COLOR Xmouse,Ymouse, "desk", "green"
+		if(BLmouse=1)then
+			if(mycolor=0)then
+				STACKVIEW SET "Stack", 2
+			endif
+		endif
+		if(keyplace=1)then
+			if(BLmouse=1 and Xmouse>746 and Xmouse<778 and Ymouse>139 and Ymouse<190)then
+				STACKVIEW SET "Stack", 2
+				keyfound=1
+				//print "got the key"
+				draw flush "ExcapeGame"	
+				draw text 10,630,  "YOU GOT THE KEY", "ExcapeGame"
+				err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/desk.gif", "Stack3"
+			endif
+		endif
+	elseif(Viewname$="Stack4")then
+		mycolor =  BITMAP COLOR Xmouse,Ymouse, "sideboard", "green"
+		if(BLmouse=1)then
+			if(mycolor=0)then
+				STACKVIEW SET "Stack", 2
+			endif
+		endif
+		if(keyplace=2)then
+			if(BLmouse=1 and Xmouse>570 and Xmouse<601 and Ymouse>156 and Ymouse<208)then
+				STACKVIEW SET "Stack", 2
+				keyfound=1
+				//print "got the key"
+				draw flush "ExcapeGame"	
+				draw text 10,630,  "YOU GOT THE KEY", "ExcapeGame"	
+				err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/sideboard.gif", "Stack4"
+			endif
+		endif
+	elseif(Viewname$="Stack5")then
+		mycolor =  BITMAP COLOR Xmouse,Ymouse, "door", "green"
+		if(BLmouse=1)then
+			if(Xmouse>180 and Xmouse<610 and Ymouse>0 and Ymouse<600)then	
+				if(keyfound=1)then
+					draw flush "ExcapeGame"
+					STACKVIEW SET "Stack", 1
+					keyfound=0
+				else
+					draw flush "ExcapeGame"	
+					draw text 10,630,  "THE DOOR IS LOCKED, YOU NEED THE KEY", "ExcapeGame"
+				endif
+			else	
+				if(mycolor=0)then
+					STACKVIEW SET "Stack", 2
+				endif
+			endif	
+		endif
+	elseif(Viewname$="Stack6")then
+		mycolor =  BITMAP COLOR Xmouse,Ymouse, "bed", "green"
+		if(BLmouse=1)then
+			if(mycolor=0)then
+				STACKVIEW SET "Stack", 2
+			endif
+		endif
+		if(keyplace=3)then
+			if(BLmouse=1 and Xmouse>592 and Xmouse<623 and Ymouse>225 and Ymouse<278)then
+				STACKVIEW SET "Stack", 2
+				keyfound=1
+				draw flush "ExcapeGame"	
+				draw text 10,630,  "YOU GOT THE KEY", "ExcapeGame"
+				err = draw image 0,0 to 800,600, ProgramFolder$+"/gfx/bed.gif", "Stack6"
+			endif
+		endif
+	endif
+	
+	if(window count<1) inloop = false
+	sleep 0.05
+wend

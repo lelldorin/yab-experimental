@@ -1,0 +1,386 @@
+#!/boot/system/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 24.05.2018
+REM Lelldorin
+
+ready_to_compile=0
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/projects/yab/example_bricks"
+endif
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+startx=0
+gamestart=0
+ballrun=0
+paddlexpos=223
+ballxpos=243
+ballypos=434
+Lifes=5
+Score=0
+CountBricks=7
+gamefinish=0
+
+WINDOW OPEN screenWidth/2-250,screenHeight/2-280 to screenWidth/2+250,screenHeight/2+280, "bricks", "yabBricks"
+	WINDOW SET "bricks",  "Flags", "Not-Resizable,Not-Zoomable"
+		DRAW SET "BGColor", 20,20,20, "bricks"
+		DRAW SET "LowColor", 0,100,0, "bricks"
+		DRAW SET "HighColor", 255,255,255, "bricks"
+		DRAW SET "Noto Sans,Regular,30", "bricks"
+		draw text 390,40,  "Lifes: "+str$(Lifes), "bricks"
+		draw text 10,40,  "0", "bricks"
+	VIEW 0,60 TO 500,560, "playground", "bricks"
+		DRAW SET "BGColor", 0,0,0, "playground"
+		CANVAS 0,0 to 500,500, "canvas", "playground"
+			DRAW SET "LowColor", 0,100,0, "canvas"
+			DRAW SET "HighColor", 255,255,255, "canvas"
+			DRAW SET "Noto Sans,Regular,40", "canvas"
+		
+		bitmap 501,501, "bg"
+			err = draw image 0,0 to 500,500, ProgramFolder$+"/gfx/black.gif", "bg"
+		bitmap 40,20, "blanko"
+			err = draw image 0,0 to 40,20, ProgramFolder$+"/gfx/black.gif", "blanko"
+		bitmap 40,20, "red"
+			err = draw image 0,0 to 40,20, ProgramFolder$+"/gfx/blick_red.gif", "red"
+		bitmap 40,20, "green"
+			err = draw image 0,0 to 40,20, ProgramFolder$+"/gfx/blick_green.gif", "green"
+		bitmap 40,20, "blue"
+			err = draw image 0,0 to 40,20, ProgramFolder$+"/gfx/blick_blue.gif", "blue"
+		bitmap 100,14, "paddle"
+			err = draw image 0,0 to 100,14, ProgramFolder$+"/gfx/paddle.gif", "paddle"
+		bitmap 500,14, "flushpaddle"
+			err = draw image 0,0 to 500,14, ProgramFolder$+"/gfx/black.gif", "flushpaddle"
+		bitmap 16,16, "ball"
+			err = draw image 0,0 to 16,16, ProgramFolder$+"/gfx/ball.gif", "ball"
+		bitmap 16,16, "flushball"
+			err = draw image 0,0 to 16,16, ProgramFolder$+"/gfx/black.gif", "flushball"
+		
+			draw bitmap 0,0, "bg", "copy", "canvas"		
+			
+			dim  Playground$(7,1)
+				Playground$(1,1)="red:100:100"
+				Playground$(2,1)="green:141:100"
+				Playground$(3,1)="blue:182:100"
+				Playground$(4,1)="red:223:100"
+				Playground$(5,1)="green:264:100"
+				Playground$(6,1)="blue:305:100"
+				Playground$(7,1)="red:346:100"
+				
+				numElements=0	
+				dim Elements$(1)
+					i=0
+					for i = 1 to 7
+						numElements = split(Playground$(i,1), Elements$(),":")
+						draw bitmap val(Elements$(2)),val(Elements$(3)), Elements$(1), "copy", "canvas"
+					next i
+			
+				draw bitmap 223,450, "paddle", "alpha", "canvas"	
+				draw bitmap 243,434, "ball", "alpha", "canvas"	
+			
+		
+			
+				
+//Main Loop
+dim part$(1)
+dim mouse$(1)
+inloop = true
+while(inloop)
+
+	OPTION SET "bricks", "Focus", 1
+	keymsg$ = keyboard message$("bricks")
+		//print keymsg$ 
+		
+	if(keymsg$<>"" and keymsgs$<>old_keymsg$) then 
+		old_keymsg$ = keymsg$
+		
+	endif
+	switch(keymsg$)
+	
+			
+	
+	default:
+		
+		break
+
+		
+	end switch
+
+	msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "")  print msg$
+	
+	switch msg$
+	
+	case "bricks:_QuitRequested|"
+		WINDOW CLOSE "bricks"
+		break
+		
+	
+	default:
+	
+	end switch
+		
+	if(window count<1) inloop = false
+	
+	//sleep 0.4
+	
+	mmsg$ = MOUSE MESSAGE$
+	if (mmsg$<>"" and mmsg$<>old_mmsg$) then
+		//print mmsg$
+		old_mmsg$= mmsg$ 
+		nx = split(mmsg$, mouse$(), ":")
+		Viewname$=mouse$(1)
+		Xmouse	= val(mouse$(2))
+		Ymouse	= val(mouse$(3))
+		BLmouse	= val(mouse$(4))
+		BCmouse= val(mouse$(5))
+		BRmouse= val(mouse$(6))
+		casestring$=mouse$(2)+":"+mouse$(3)
+		mmsg$=""
+		if(startx=0)then
+			old_xmouse=Xmouse
+			startx=1
+		endif
+	endif
+	
+	switch (casestring$)
+	end switch
+	if(Viewname$="canvas")then
+		if(gamestart=0)then
+			if(Xmouse<old_xmouse or Xmouse>old_xmouse)then
+				if(Xmouse<old_xmouse)then
+					ballrun=1		//ball_left
+				elseif(Xmouse>old_xmouse)then
+					ballrun=2		//ball_right
+				endif
+				gamestart=1
+			endif
+		else
+			if(gamefinish=0)then
+				drawbricks()
+				draw bitmap 0,450, "flushpaddle", "copy", "canvas"
+				draw bitmap Xmouse,450, "paddle", "alpha", "canvas"
+				paddlexpos=Xmouse
+				//print Xmouse
+				if(ballrun=1)then	
+					print "ball run 1"
+					draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+					ballxpos=ballxpos-16
+					ballypos=ballypos-16
+					draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"		
+					if(ballxpos<=0)then
+						ballrun=2
+					endif
+					if(ballypos<=0)then
+						ballrun=3 	//ball needs down
+					endif
+					CheckCollision()
+				elseif(ballrun=2)then
+					print "ball run 2"
+					draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+					ballxpos=ballxpos+16
+					ballypos=ballypos-16					
+					draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"	
+					if(ballxpos>=475)then
+						ballrun=1
+					endif
+					if(ballypos<=0)then
+						ballrun=4		//ball needs down
+					endif
+					CheckCollision()
+				elseif(ballrun=3)then
+					print "ball run3"
+					draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+					ballxpos=ballxpos-16
+					ballypos=ballypos+16					
+					draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"	
+					if(ballxpos<=0)then
+						ballrun=5
+					endif	
+					CheckCollision()
+				elseif(ballrun=5)then
+					print "ballrun 5"	
+					draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+					ballxpos=ballxpos+16
+					ballypos=ballypos+16					
+					draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"	
+					if(ballypos>=475)then
+						draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+						draw bitmap 0,450, "flushpaddle", "copy", "canvas"
+						
+						Lifes=Lifes-1
+													
+						gamestart=0
+						ballrun=0
+						paddlexpos=223
+						ballxpos=243
+						ballypos=434
+					
+						draw flush "bricks"
+						draw text 10,40,  str$(Score), "bricks"
+						draw text 390,40,  "Lifes: "+str$(Lifes), "bricks"						
+					
+						draw bitmap paddlexpos,450, "paddle", "alpha", "canvas"	
+						draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"						
+					endif		
+					if(Lifes<=0)then
+						YouAreDead()
+					else
+						CheckCollision()	
+					endif
+					draw flush "bricks"
+					draw text 10,40,  str$(Score), "bricks"
+					draw text 390,40,  "Lifes: "+str$(Lifes), "bricks"			
+				elseif(ballrun=4)then
+					print "ballrun 4"
+					draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+					ballxpos=ballxpos+16
+					ballypos=ballypos+16					
+					draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"	
+					if(ballxpos>=475)then
+						ballrun=6
+					endif	
+					CheckCollision()		
+				elseif(ballrun=6)then
+					print "ballrun 6"
+					draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+					ballxpos=ballxpos-16
+					ballypos=ballypos+16					
+					draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"	
+					if(ballypos>=475)then
+						draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+						draw bitmap 0,450, "flushpaddle", "copy", "canvas"
+						Lifes=Lifes-1
+												
+						gamestart=0
+						ballrun=0
+						paddlexpos=223
+						ballxpos=243
+						ballypos=434
+					
+						draw flush "bricks"
+						draw text 10,40,  str$(Score), "bricks"
+						draw text 390,40,  "Lifes: "+str$(Lifes), "bricks"						
+						
+						draw bitmap paddlexpos,450, "paddle", "alpha", "canvas"	
+						draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"					
+					endif
+					if(Lifes<=0)then
+						YouAreDead()
+					else
+						CheckCollision()	
+					endif
+					draw flush "bricks"
+					draw text 10,40,  str$(Score), "bricks"
+					draw text 390,40,  "Lifes: "+str$(Lifes), "bricks"
+				else
+				endif			
+			endif
+		endif		
+	endif	
+wend
+
+sub CheckCollision()
+	local i
+	local numElements
+	numElements=0	
+	dim Elements$(1)
+		i=0
+		for i = 1 to 7
+			//wait 0.2
+			numElements = split(Playground$(i,1), Elements$(),":")
+			if(ballxpos>=paddlexpos and  ballxpos<=paddlexpos+50 and ballypos>=434)then
+				draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+				draw bitmap 0,450, "flushpaddle", "copy", "canvas"
+				//print "paddle and ball"
+				if(ballrun=5)then
+					ballrun=2
+				elseif(ballrun=6)then
+					ballrun=2
+				endif
+				draw bitmap paddlexpos,450, "paddle", "alpha", "canvas"	
+				draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"	
+			elseif(ballxpos>=paddlexpos+51 and  ballxpos+16<=paddlexpos+100  and ballypos>=434)then
+				draw bitmap ballxpos,ballypos, "flushball", "copy", "canvas"
+				draw bitmap 0,450, "flushpaddle", "copy", "canvas"
+				//print "paddle and ball"
+				if(ballrun=5)then
+					ballrun=1
+				elseif(ballrun=6)then
+					ballrun=1
+				endif
+				draw bitmap paddlexpos,450, "paddle", "alpha", "canvas"	
+				draw bitmap ballxpos,ballypos, "ball", "alpha", "canvas"	
+			
+			elseif(ballxpos>=val(Elements$(2)) and ballxpos<=val(Elements$(2))+40 and ballypos>=val(Elements$(3))-7 and ballypos<=val(Elements$(3))+16)then
+				draw bitmap val(Elements$(2)),val(Elements$(3)),  "blanko", "copy", "canvas"
+				if(ballrun=3)then
+					ballrun=2
+				elseif(ballrun=4)then
+					ballrun=1
+				endif
+				Playground$(i,1)="::"
+				Score=Score+10
+				draw flush "bricks"
+				draw text 10,40,  str$(Score), "bricks"
+				draw text 390,40,  "Lifes: "+str$(Lifes), "bricks"
+			elseif(ballxpos+6>=paddlexpos and  ballxpos+6<=paddlexpos+50  and ballypos>=450)then
+				//print "paddle and ball"
+				if(ballrun=5)then
+					ballrun=2
+				elseif(ballrun=6)then
+					ballrun=1
+				endif
+			elseif(ballxpos+6>=paddlexpos+51 and  ballxpos+6<=paddlexpos+100  and ballypos>=450)then
+				//print "paddle and ball"
+				if(ballrun=5)then
+					ballrun=2
+				elseif(ballrun=6)then
+					ballrun=1
+				endif
+			endif
+		next i
+end sub
+
+sub YouAreDead()
+	gamefinish=1
+	draw bitmap 0,0, "bg", "copy", "canvas"
+	draw text 150,250,  "Game over!", "canvas"
+end sub
+
+sub drawbricks()
+	local CountBricks
+	local numElements
+	CountBricks=0
+	i=1
+	dim elements$(1)		
+		for i = 1 to 7
+			numElements = split(Playground$(i,1), elements$(),":")
+			if(trim$(elements$(1))="")then
+			else
+				draw bitmap val(elements$(2)),val(elements$(3)), elements$(1), "copy", "canvas"
+				CountBricks=CountBricks+1
+			endif
+		next i	
+	
+	if(CountBricks<=0)then
+		gamefinish=1
+		draw bitmap 0,0, "bg", "copy", "canvas"
+		draw text 100,250,  "You have won!", "canvas"
+	endif
+end sub

@@ -1,0 +1,468 @@
+#!/boot/system/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 24.05.2018
+REM Lelldorin
+
+ready_to_compile=0
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/projects/yab/example_tetris"
+endif
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+startx=0
+gamestart=0
+Lifes=5
+Score=0
+gamefinish=0
+
+stoney=1
+
+
+WINDOW OPEN screenWidth/2-250,screenHeight/2-280 to screenWidth/2+250,screenHeight/2+280, "tetris", "yabTRIS"
+	WINDOW SET "tetris",  "Flags", "Not-Resizable,Not-Zoomable"
+		DRAW SET "BGColor", 20,20,20, "tetris"
+		DRAW SET "LowColor", 0,100,0, "tetris"
+		DRAW SET "HighColor", 255,255,255, "tetris"
+		DRAW SET "Noto Sans,Regular,30", "tetris"
+		draw text 390,40,  "Lifes: "+str$(Lifes), "tetris"
+		draw text 10,40,  "0", "tetris"
+	VIEW 130,100 TO 370,560, "playground", "tetris"
+		DRAW SET "BGColor", 0,0,0, "playground"
+		CANVAS 0,0 to 239,480, "canvas", "playground"
+			DRAW SET "LowColor", 0,100,0, "canvas"
+			DRAW SET "HighColor", 255,255,255, "canvas"
+			DRAW SET "Noto Sans,Regular,40", "canvas"
+		
+		bitmap 240,480, "bg"
+			err = draw image 0,0 to 240,480, ProgramFolder$+"/gfx/black.gif", "bg"
+			draw bitmap 0,0, "bg", "copy", "canvas"	
+		bitmap 240,40, "uni1"
+			err = draw image 0,0 to 240,40, ProgramFolder$+"/gfx/black.gif", "uni1"		//height 40
+		bitmap 240,60, "uni2"
+			err = draw image 0,0 to 240,60, ProgramFolder$+"/gfx/black.gif", "uni2"		//height 60
+		bitmap 240,20, "uni3"
+			err = draw image 0,0 to 240,20, ProgramFolder$+"/gfx/black.gif", "uni1"		//height 20
+			
+			
+		//bitmap 40,40, "uni1"
+		//	err = draw image 0,0 to 40,40, ProgramFolder$+"/gfx/black.gif", "uni1"				//40x40 e
+		//bitmap 40,60, "uni2"
+		//	err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/black.gif", "uni2"				//40x60 d + L + q + z
+		//bitmap 60,40, "uni3"
+		//	err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/black.gif", "uni3"				//60x40 d + L + q + z
+		//bitmap 20,60, "uni4"
+		//	err = draw image 0,0 to 20,60, ProgramFolder$+"/gfx/black.gif", "uni4"				//20x60 i
+		//bitmap 60,20, "uni5"
+		//	err = draw image 0,0 to 60,20, ProgramFolder$+"/gfx/black.gif", "uni5"				//60x20 i
+		bitmap 40,60, "d1"
+			err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/d1.gif", "d1"
+		bitmap 60,40, "d2"
+			err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/d2.gif", "d2"
+		bitmap 40,60, "d3"
+			err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/d3.gif", "d3"
+		bitmap 60,40, "d4"
+			err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/d4.gif", "d4"	
+		bitmap 20,20, "e1"
+			err = draw image 0,0 to 20,240, ProgramFolder$+"/gfx/e1.gif", "e1"
+		bitmap 20,20, "e2"
+			err = draw image 0,0 to 20,20, ProgramFolder$+"/gfx/e2.gif", "e2"
+		bitmap 20,60, "i1"
+			err = draw image 0,0 to 20,60, ProgramFolder$+"/gfx/i1.gif", "i1"
+		bitmap 60,20, "i2"
+			err = draw image 0,0 to 60,20, ProgramFolder$+"/gfx/i2.gif", "i2"
+		bitmap 40,60, "l1"
+			err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/l1.gif", "l1"
+		bitmap 60,40, "l2"
+			err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/l2.gif", "l2"
+		bitmap 40,60, "l3"
+			err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/l3.gif", "l3"
+		bitmap 60,40, "l4"
+			err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/l4.gif", "l4"
+		bitmap 40,60, "q1"
+			err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/q1.gif", "q1"
+		bitmap 60,40, "q2"
+			err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/q2.gif", "q2"		
+		bitmap 40,60, "z1"
+			err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/z1.gif", "z1"
+		bitmap 60,40, "z2"
+			err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/z2.gif", "z2"
+		bitmap 40,60, "z3"
+			err = draw image 0,0 to 40,60, ProgramFolder$+"/gfx/z3.gif", "z3"
+		bitmap 60,40, "z4"
+			err = draw image 0,0 to 60,40, ProgramFolder$+"/gfx/z4.gif", "z4"
+		
+		dim Playground_Easy$(6,12)
+			i=0
+			for i = 1 to 12
+				x=x+1
+				Playground_Easy$(x,1)=":"
+				Playground_Easy$(x,2)=":"
+				Playground_Easy$(x,3)=":"
+				Playground_Easy$(x,4)=":"
+				Playground_Easy$(x,5)=":"
+				Playground_Easy$(x,6)=":"
+				if(x=6)then
+					x=0
+				endif
+			next i
+			i=0
+			x=0
+			for i = 1 to 12
+				x=x+1
+				print Playground_Easy$(x,1)
+				print Playground_Easy$(x,2)
+				print Playground_Easy$(x,3)
+				print Playground_Easy$(x,4)
+				print Playground_Easy$(x,5)
+				print Playground_Easy$(x,6)
+				if(x=6)then
+					x=0
+				endif
+			next i
+		
+		posstone()
+		objecs()
+					
+		stoney=0
+		nscreen=0
+				
+		gamestart=1
+		type$="d1"
+		mx=440
+//Main Loop
+dim part$(1)
+dim mouse$(1)
+inloop = true
+while(inloop)
+
+	OPTION SET "tetris", "Focus", 1
+	keymsg$ = keyboard message$("tetris")
+		//print keymsg$ 
+		
+	if(keymsg$<>"" and keymsgs$<>old_keymsg$) then 
+		old_keymsg$ = keymsg$
+		
+	endif
+	switch(keymsg$)
+	
+	case "left"
+		print type$
+		moving=1
+		oldstonex=stonex
+		//if(type$="d1" or type$="d3" or type$="e1"or type$="e3" or type$="i1" or type$="l1" or type$="l3" or type$="e1" or type$="z1" or type$="z3")then
+		if(stonex-40<0)then
+		else
+			stonex=stonex-40
+		endif
+		moving=0
+		break
+		
+	case "right"
+		print type$
+		moving=2
+		oldstonex=stonex
+		if(type$="d2" or type$="d4" or type$="i2"or type$="l2" or type$="l4" or type$="q2" or type$="z2" or type$="z4")then
+			stonex2=20
+		elseif(type$="d1" or type$="d3" or type$="i1"or type$="l1" or type$="l3" or type$="q1" or type$="z1" or type$="z3")then
+			stonex2=10
+		endif		
+		if(stonex+40>200)then			
+		  	stonex=200-stonex2
+		 else
+		 	stonex=stonex+40
+		endif
+		moving=0
+		break
+	
+	case "down"	
+	case "up"
+		ChangeObject()
+		break
+			
+	
+	default:
+		
+		break
+
+		
+	end switch
+
+	msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "")  print msg$
+	
+	switch msg$
+	
+	case "tetris:_QuitRequested|"
+		WINDOW CLOSE "tetris"
+		break
+		
+	
+	default:
+	
+	end switch
+		
+	if(window count<1) inloop = false
+	
+	sleep 0.09
+	
+	mmsg$ = MOUSE MESSAGE$
+	if (mmsg$<>"" and mmsg$<>old_mmsg$) then
+		//print mmsg$
+		old_mmsg$= mmsg$ 
+		nx = split(mmsg$, mouse$(), ":")
+		Viewname$=mouse$(1)
+		Xmouse	= val(mouse$(2))
+		Ymouse	= val(mouse$(3))
+		BLmouse	= val(mouse$(4))
+		BCmouse= val(mouse$(5))
+		BRmouse= val(mouse$(6))
+		casestring$=mouse$(4)+":"+mouse$(5)
+		mmsg$=""
+		if(startx=0)then
+			old_xmouse=Xmouse
+			startx=1
+		endif
+	endif
+	
+	switch (casestring$)
+	end switch
+	if(Viewname$="tetris")then
+		if(gamestart=1)then
+			//print "cs:"+casestring$
+			if(stoney<mx)then
+				if(type$="d1")then
+					oldstoney=stoney		
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10					
+					draw bitmap stonex,stoney, "d1", "alpha", "canvas"	
+					mx=400		
+				elseif(type$="d2")then	
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "d2", "alpha", "canvas"
+					mx=420
+				elseif(type$="d3")then
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"					
+					stoney=stoney+10	
+					draw bitmap stonex,stoney, "d3", "alpha", "canvas"	
+					mx=400	
+				elseif(type$="d4")then	
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"	
+					stoney=stoney+10				
+					draw bitmap stonex,stoney, "d4", "alpha", "canvas"
+					mx=420
+				elseif(type$="e1")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni3", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "e1", "alpha", "canvas"
+					mx=420	
+				elseif(type$="e2")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni3", "copy", "canvas"
+					stoney=stoney+10	
+					draw bitmap stonex,stoney, "e2", "alpha", "canvas"
+					mx=420
+				elseif(type$="i1")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"	
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "i1", "alpha", "canvas"
+					mx=400		
+				elseif(type$="i2")then
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "i2", "alpha", "canvas"
+					mx=400	
+				elseif(type$="l1")then
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "l1", "alpha", "canvas"					
+					mx=400						
+				elseif(type$="l2")then
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "l2", "alpha", "canvas"					
+					mx=400									
+				elseif(type$="l3")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "l3", "alpha", "canvas"
+					mx=400
+				elseif(type$="l4")then
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"	
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "l4", "alpha", "canvas"
+					mx=400	
+				elseif(type$="q1")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "q1", "alpha", "canvas"
+					mx=400	
+				elseif(type$="q2")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"	
+					stoney=stoney+10	
+					draw bitmap stonex,stoney, "q2", "alpha", "canvas"	
+					mx=400		
+				elseif(type$="z1")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "z1", "alpha", "canvas"					
+					mx=400
+				elseif(type$="z2")then
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "z2", "alpha", "canvas"
+					mx=400
+				elseif(type$="z3")then
+					oldstoney=stoney	
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "z3", "alpha", "canvas"
+					mx=400	
+				elseif(type$="z4")then
+					oldstoney=stoney
+					draw bitmap 0,oldstoney, "uni2", "copy", "canvas"
+					stoney=stoney+10
+					draw bitmap stonex,stoney, "z4", "alpha", "canvas"
+					mx=400	
+				endif		
+			else
+				bgshoot()
+				draw bitmap 0,0, "bg1", "copy", "canvas"
+				stoney=0
+				oldstoney=0
+				posstone()
+				objecs()
+			endif
+			
+			
+			if(BLmouse=1)then
+				ChangeObject()
+			endif			
+			
+		else
+		endif
+	endif	
+wend
+
+sub posstone()
+	stonestartposition=ran(3)
+	//stonestartposition=0
+	stonestartposition$=right$(str$(stonestartposition), 1)
+	if(stonestartposition$="0")then
+		stonex=0
+		oldstonex=0
+	elseif(stonestartposition$="1")then
+		stonex=40
+		oldstonex=40
+	elseif(stonestartposition$="2" or stonestartposition$="4")then
+		stonex=80
+		oldstonex=80	
+	elseif(stonestartposition$="3"  or stonestartposition$="9")then
+		stonex=120	
+		oldstonex=120
+	elseif(stonestartposition$="5"  or stonestartposition$="7")then
+		stonex=160	
+		oldstonex=160
+	elseif(stonestartposition$="6"  or stonestartposition$="8")then
+		stonex=200		
+		oldstonex=200
+	endif	
+end sub
+
+sub objecs()
+	local objecttype
+	objecttype=ran(3)
+	objecttype$=right$(str$(objecttype), 1)
+	if(objecttype$="0"  or objecttype$="7")then
+	        	type$="e1"
+	elseif(objecttype$="1")then
+		type$="z1"		
+	elseif(objecttype$="2" or objecttype$="4")then
+		type$="d1"	
+	elseif(objecttype$="3"  or objecttype$="9")then
+		type$="i1"			
+	elseif(objecttype$="5")then
+		type$="l1"			
+	elseif(objecttype$="6"  or objecttype$="8")then
+		type$="q1"				
+	endif	
+	print type$
+end sub
+
+
+sub bgshoot()
+	wxpos = WINDOW GET "tetris", "Position-X"
+	wypos = WINDOW GET "tetris", "Position-Y"
+	SCREENSHOT wxpos+130, wypos+100 to wxpos+370, wypos+480, "bg1"
+end sub
+
+sub ChangeObject()
+	if(type$="d1")then
+		type$="d2"	
+	elseif(type$="d2")then
+		type$="d3"
+	elseif(type$="d3")then
+		type$="d4"
+	elseif(type$="d4")then
+		type$="d1"
+	elseif(type$="e1")then
+		type$="e2"
+	elseif(type$="e2")then
+		type$="e1"
+	elseif(type$="i1")then
+		type$="i2"
+	elseif(type$="i2")then
+		type$="i1"
+	elseif(type$="l1")then
+		type$="l2"
+	elseif(type$="l2")then
+		type$="l3"
+	elseif(type$="l3")then
+		type$="l4"
+	elseif(type$="l4")then
+		type$="l1"
+	elseif(type$="q1")then
+		type$="q2"
+	elseif(type$="q2")then
+		type$="q1"
+	elseif(type$="z1")then
+		type$="z2"
+	elseif(type$="z2")then
+		type$="z3"
+	elseif(type$="z3")then
+		type$="z4"
+	elseif(type$="z4")then
+		type$="z1"
+	endif
+end sub

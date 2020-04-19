@@ -1,0 +1,376 @@
+#!/boot/home/config/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 05.01.2017
+REM Copyright by Christian Albrecht, BeSly Software Solutions
+REM Developer: Christian Albrecht
+
+development=1
+SelectedPipes$=""
+
+ready_to_compile=1
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/Projekte/yab/Example_PipeGame"
+endif
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+WINDOW OPEN screenWidth/2-200,screenHeight/2-200 to screenWidth/2+200,screenHeight/2+200, "PipeGame", "Example PipeGame"
+	WINDOW SET "PipeGame",  "Flags", "Not-Resizable,Not-Zoomable"
+	
+	//BUTTON 10,10 TO 390,30, "New", "new game", "PipeGame"
+	
+	Playground()
+
+	BUTTON 10,370 TO 390,390, "Check", "check", "PipeGame"
+	 
+
+//Main Loop
+dim part$(1)
+inloop = true
+while(inloop)
+
+msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "") print msg$
+	
+	switch msg$
+	
+	
+	case "New|"
+		DRAW FLUSH "PipeGame"
+		//Playground()
+		break
+	
+	
+	//pic 1 = bow left top
+	//pic 2 = straight vertical
+	//pic 3 = branch left
+	//pic 4 = bow lelft bottom
+	//pic 5 = branch top
+	//pic 6 = cross
+	//pic 7 = straight horizontal 
+	//pic 8 = bow bottom right
+	//pic 9 = branch right
+	//pic 10 = bow top right
+	//pic 11 = branch bottom
+		
+	case PartOne$+":"+PartTwo$+":"+PartThree$+":"+PartFour$+"|"
+		if(SelectedPipes$="")then
+			SelectedPipes$=PartOne$+":"
+		else
+			SelectedPipes$=SelectedPipes$+PartOne$+":"
+		endif
+		print SelectedPipes$
+		if(PartFour$="pic1")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic4", ProgramFolder$+"/gfx/pic4.bmp", ProgramFolder$+"/gfx/pic4.bmp", ProgramFolder$+"/gfx/pic4.bmp", PartOne$
+		elseif(PartFour$="pic2")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic7", ProgramFolder$+"/gfx/pic7.bmp", ProgramFolder$+"/gfx/pic7.bmp", ProgramFolder$+"/gfx/pic7.bmp", PartOne$
+		elseif(PartFour$="pic3")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic5", ProgramFolder$+"/gfx/pic5.bmp", ProgramFolder$+"/gfx/pic5.bmp", ProgramFolder$+"/gfx/pic5.bmp", PartOne$
+		elseif(PartFour$="pic4")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic8", ProgramFolder$+"/gfx/pic8.bmp", ProgramFolder$+"/gfx/pic8.bmp", ProgramFolder$+"/gfx/pic8.bmp", PartOne$
+		elseif(PartFour$="pic5")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic9", ProgramFolder$+"/gfx/pic9.bmp", ProgramFolder$+"/gfx/pic9.bmp", ProgramFolder$+"/gfx/pic9.bmp", PartOne$
+		//pic 6 is the cross and need no change
+		elseif(PartFour$="pic7")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic2", ProgramFolder$+"/gfx/pic2.bmp", ProgramFolder$+"/gfx/pic2.bmp", ProgramFolder$+"/gfx/pic2.bmp", PartOne$
+		elseif(PartFour$="pic8")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic10", ProgramFolder$+"/gfx/pic10.bmp", ProgramFolder$+"/gfx/pic10.bmp", ProgramFolder$+"/gfx/pic10.bmp", PartOne$
+		elseif(PartFour$="pic9")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic11", ProgramFolder$+"/gfx/pic11.bmp", ProgramFolder$+"/gfx/pic11.bmp", ProgramFolder$+"/gfx/pic11.bmp", PartOne$
+		elseif(PartFour$="pic10")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic1", ProgramFolder$+"/gfx/pic1.bmp", ProgramFolder$+"/gfx/pic1.bmp", ProgramFolder$+"/gfx/pic1.bmp", PartOne$
+		elseif(PartFour$="pic11")then
+			View Remove PartOne$
+			VIEW val(PartTwo$),val(PartThree$) TO val(PartTwo$)+48,val(PartThree$)+48, PartOne$, "PipeGame"
+			BUTTON IMAGE 0,0, PartOne$+":"+PartTwo$+":"+PartThree$+":pic3", ProgramFolder$+"/gfx/pic3.bmp", ProgramFolder$+"/gfx/pic3.bmp", ProgramFolder$+"/gfx/pic3.bmp", PartOne$	
+		endif
+		break
+	
+	case "PipeGame:_QuitRequested|"
+		WINDOW CLOSE "PipeGame"
+		break
+	
+	
+	default:
+	
+	end switch
+	
+	if(window count<1) inloop = false
+	sleep 0.05
+wend
+
+sub Playground()
+	local pic1
+	local pic2
+	local pic3
+	local pic4
+	local pic5
+	local pic6
+	local pic7
+	local pic8
+	local pic9
+	local pic10
+	local pic11
+	local cards
+	local x
+	local y
+	local i
+	local a
+	local cardsequence$
+	
+	//Geneating Playground
+	pic1=0
+	pic2=0
+	pic3=0
+	pic4=0
+	pic5=0
+	pic6=0
+	pic7=0
+	piv8=0
+	pic9=0
+	pic10=0
+	pic11=0
+	cards=0
+	cardsequence$=""
+	x=0
+	y=0
+	i=0
+	a=0
+	
+	dim playcards$(1)
+	while (cards<25)
+		x1=x1+1
+		random=ran(25)
+
+		numElements = split(str$(random), playcards$(),".")
+		if(playcards$(1)="1")then
+			if(pic1=4)then
+			else
+				if(cardsequence$="")then
+					pic1=pic1+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic1=pic1+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="2")then
+			if(pic2=4)then
+			else
+				if(cardsequence$="")then
+					pic2=pic2+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic2=pic2+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="3")then
+			if(pic3=4)then
+			else
+				if(cardsequence$="")then
+					pic3=pic3+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic3=pic3+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="4")then
+			if(pic4=4)then
+			else
+				if(cardsequence$="")then
+					pic4=pic4+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic4=pic4+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="5")then
+			if(pic5=4)then
+			else
+				if(cardsequence$="")then
+					pic5=pic5+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic5=pic5+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="6")then
+			if(pic6=4)then
+			else
+				if(cardsequence$="")then
+					pic6=pic6+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic6=pic6+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="7")then
+			if(pic7=4)then
+			else
+				if(cardsequence$="")then
+					pic7=pic7+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic7=pic7+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="8")then
+			if(pic8=4)then
+			else
+				if(cardsequence$="")then
+					pic8=pic8+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic8=pic8+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="9")then
+			if(pic9=4)then
+			else
+				if(cardsequence$="")then
+					pic9=pic9+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic9=pic9+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="10")then
+			if(pic10=4)then
+			else
+				if(cardsequence$="")then
+					pic10=pic10+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic10=pic10+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		elseif(playcards$(1)="11")then
+			if(pic11=4)then
+			else
+				if(cardsequence$="")then
+					pic11=pic11+1
+					cards=cards+1
+					cardsequence$="pic"+playcards$(1)
+				else
+					pic11=pic11+1
+					cards=cards+1
+					cardsequence$=cardsequence$+":pic"+playcards$(1)
+				endif
+			endif
+		endif		
+	wend
+	
+	x=80
+	y=80
+	
+	//pic 1 = bow left top
+	//pic 2 = straight vertical
+	//pic 3 = branch left
+	//pic 4 = bow lelft bottom
+	//pic 5 = branch top
+	//pic 6 = cross
+	//pic 7 = straight horizontal 
+	//pic 8 = bow top right
+	//pic 9 = branch right
+	//pic 10 = bow bottom right
+	//pic 11 = branch bottom
+	
+	
+	dim playground_array$(5,5)
+	dim playground$(1)
+		numElements = split(cardsequence$, playground$(),":")
+		
+		a=1
+		b=0	
+			
+		for i = 1 to 25
+			b=b+1
+			playground_array$(a,b)=playground$(i)+":o"
+			VIEW x,y TO x+48,y+48, str$(i), "PipeGame"
+			BUTTON IMAGE 0,0, str$(i)+":"+str$(x)+":"+str$(y)+":"+playground$(i), ProgramFolder$+"/gfx/"+playground$(i)+".bmp", ProgramFolder$+"/gfx/"+playground$(i)+".bmp", ProgramFolder$+"/gfx/"+playground$(i)+".bmp", str$(i)
+			x=x+48
+			if(i=5 or i=10 or i=15 or i=20)then
+				a=a+1
+				b=0
+				y=y+48
+				x=80
+			endif
+		next i	
+		
+		i=0
+		
+	
+	err = DRAW IMAGE 32,80 TO 80,128, ProgramFolder$+"/gfx/finish.bmp", "PipeGame"
+	err = DRAW IMAGE 321,272 TO 368,320, ProgramFolder$+"/gfx/start.bmp", "PipeGame"
+	checkpath()
+		
+end sub
+
+sub checkpath()
+
+	
+
+end sub

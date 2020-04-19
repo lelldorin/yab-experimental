@@ -1,0 +1,1040 @@
+Programname$="Road Game Example"
+Version$="0.3"
+VersionDate$="07.01.2016"
+Developer$="Lelldorin"
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+ProgramFolder$="/SharedBFS/projects/yab/Example_Road-Game"
+
+
+WINDOW OPEN screenWidth/2-250,screenHeight/2-223 to screenWidth/2+249,screenHeight/2+223, "ExampleGameplay", "Game Example : Ghost Driver"
+	DRAW SET "BGColor", 0,0,0, "ExampleGameplay"
+		DRAW SET "HighColor", 255,255,255, "ExampleGameplay"
+		DRAW SET "LowColor", 155,155,155, "ExampleGameplay"
+	DRAW SET "DejaVu Sans, Condensed Bold, 40", "ExampleGameplay"
+		DRAW TEXT 10,40, "0", "ExampleGameplay"
+	
+	// LIFE DISPLAY
+	CANVAS 410,0 to 500,50, "Life", "ExampleGameplay"
+		draw set "highcolor", 0,0,0, "Life"
+			draw rect 0,0 to 90,50, "Life"
+					
+	// PLAYGROUND
+	CANVAS 0,50 to 500,447, "Canvas", "ExampleGameplay"
+		draw set "highcolor", 0,0,0, "Canvas"
+			draw rect 0,0 to 500,397, "Canvas"
+	
+	// GENERATING BITMAPS
+	bitmap 500,397, "background"
+		err = draw image 0,0 to 500,397, ProgramFolder$+"/background.gif", "background"
+	bitmap 4,59, "line"
+		err = draw image 0,0 to 4,59, ProgramFolder$+"/line.gif", "line"
+	bitmap 4,59, "line_blank"
+		err = draw image 0,0 to 4,59, ProgramFolder$+"/line_blank.gif", "line_blank"
+	bitmap 38,84, "car"
+		err = draw image 0,0 to 38,84, ProgramFolder$+"/car.gif", "car"
+	bitmap 38,84, "car_blank"
+		err = draw image 0,0 to 38,84, ProgramFolder$+"/car_blank.gif", "car_blank"
+		
+	bitmap 38,84, "car_blue"
+		err = draw image 0,0 to 38,84, ProgramFolder$+"/car_blue.gif", "car_blue"	
+	bitmap 38,84, "car_green"
+		err = draw image 0,0 to 38,84, ProgramFolder$+"/car_green.gif", "car_green"	
+	bitmap 38,84, "car_red"
+		err = draw image 0,0 to 38,84, ProgramFolder$+"/car_red.gif", "car_red"	
+		
+	bitmap 19,42, "life_ok"
+		err = draw image 0,0 to 19,42, ProgramFolder$+"/life_ok.gif", "life_ok"
+	bitmap 19,42, "life_nk"
+		err = draw image 0,0 to 19,42, ProgramFolder$+"/life_nk.gif", "life_nk"	
+
+	// DRAWING PLAYGROUND AND LIFE DISPLAY
+
+	draw bitmap 0,0, "background", "copy", "Canvas"
+		
+	draw bitmap 5,3, "life_ok", "alpha", "Life"
+	draw bitmap 35,3, "life_ok", "alpha", "Life"
+	draw bitmap 65,3, "life_ok", "alpha", "Life"
+	
+	life=3
+	secure=0
+		
+	line_pos1=1
+	draw bitmap 198,0, "line", "copy", "Canvas"
+	draw bitmap 298,0, "line", "copy", "Canvas"
+		
+	line_pos2=1
+	draw bitmap 198,60, "line", "copy", "Canvas"
+	draw bitmap 298,60, "line", "copy", "Canvas"
+	
+	line_pos3=1
+	draw bitmap 198,120, "line", "copy", "Canvas"
+	draw bitmap 298,120, "line", "copy", "Canvas"
+	
+	line_pos4=1
+	draw bitmap 198,180, "line", "copy", "Canvas"
+	draw bitmap 298,180, "line", "copy", "Canvas"
+	
+	line_pos5=1
+	draw bitmap 198,240, "line", "copy", "Canvas"
+	draw bitmap 298,240, "line", "copy", "Canvas"
+	
+	line_pos6a=1
+	line_pos6b=1
+	draw bitmap 198,300, "line", "copy", "Canvas"
+	draw bitmap 298,300, "line", "copy", "Canvas"
+	
+	//wait 100
+	
+	 action$="blank"
+
+	//carx=130
+	//cary=300
+	carx_old=230
+	carx=230
+	cary=300
+	carx1=carx
+	carx2=carx+38
+	cary1=cary
+	cary2=cary+84
+	run_time=1
+	run_time_value=8
+	
+	bluecar=0
+	bluecar_line=0
+	greencar=0
+	greencar_line=0
+	redcar=0
+	redcar_line=0
+	draw bitmap carx,cary, "car", "alpha", "Canvas"
+	gamestatus=1
+	
+	collision_blue=0
+	collision_green=0
+	collision_red=0
+	
+//Main Loop	
+dim part$(1)
+
+inloop = true
+
+while(inloop)
+	OPTION SET "ExampleGameplay", "Focus", 1
+	keymsg$ = keyboard message$("ExampleGameplay")
+	//print keymsg$ 
+		
+	if(keymsg$<>"" and keymsgs$<>old_keymsg$) then 
+		old_keymsg$ = keymsg$
+	endif
+
+	switch(keymsg$)
+		case "left"
+		case "a"
+			PRINT "A"
+			if(carx=110)then
+			else
+				carx_old=carx
+				carx=carx-10
+			endif
+			break
+		
+		case "right"	
+		case "d"
+			print "d"
+			if(carx=350)then
+			else
+				carx_old=carx
+				carx=carx+10
+			endif
+			break
+						
+	
+	default:
+		
+		break
+
+		
+	end switch
+
+	msg$ = message$
+
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$=part$(2)
+		PartThree$=part$(3)
+	fi
+
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+
+	if (msg$ <> "") print msg$
+
+	switch msg$
+	
+	case "ExampleGameplay:_QuitRequested|"
+		WINDOW CLOSE "ExampleGameplay"
+		break
+
+		
+	
+	default:
+	
+	end switch
+
+	
+	
+	if(gamestatus=1)then
+		
+		if(action$="blank")then
+			random$=str$(ran(4))
+			random$=left$(random$,1)
+		//	print random$
+	
+			// BLUE CAR
+			if(random$="1")then
+				if(bluecar=1)then
+				else
+					street_line$=str$(ran(4))
+					street_line$=left$(street_line$,1)
+				//	print street_line$
+					if(street_line$="0")then
+						random_street_position$=str$(ran(4))
+						random_street_position$=left$(random_street_position$,1)
+						if(random_street_position$="0")then
+							street_position=130
+						elseif(random_street_position$="1")then
+							street_position=120
+						elseif(random_street_position$="2")then
+							street_position=140
+						elseif(random_street_position$="3")then
+							street_position=110
+						elseif(random_street_position$="4")then
+							street_position=150
+						endif
+						y1=0
+						x1=street_position
+						
+						bluex1=x1
+						bluex2=x1+38
+						
+						bluecar_line=1
+						if(redcar_line=1 and greencar_line=1)then	
+							print "red and green too"												
+							y1=y1-434
+							
+							bluey1=y1
+							bluey2=y1+84
+						elseif(greencar_line=1)then		
+							print "green too"					
+							y1=y1-234
+							
+							bluey1=y1
+							bluey2=y1+84
+						elseif(redcar_line=1)then
+							print "red too"							
+							y1=y1-234
+							
+							bluey1=y1
+							bluey2=y1+84												
+						else
+							print "single"
+							y1=-84
+							
+							bluey1=y1
+							bluey2=y1+84
+						endif
+					elseif(street_line$="1")then
+						random_street_position$=str$(ran(4))
+						random_street_position$=left$(random_street_position$,1)
+						//print "random_street_position:"+random_street_position$
+						if(random_street_position$="0")then
+							street_position=230
+						elseif(random_street_position$="1")then
+							street_position=220
+						elseif(random_street_position$="2")then
+							street_position=240
+						elseif(random_street_position$="3")then
+							street_position=210
+						elseif(random_street_position$="4")then
+							street_position=250
+						endif
+						y1=0
+						x1=street_position
+						
+						bluex1=x1
+						bluex2=x1+38
+						
+						bluecar_line=2
+						if(redcar_line=2 and greencar_line=2)then	
+							print "red and green too"						
+							y1=y1-434
+							
+							bluey1=y1
+							bluey2=y1+84					
+						elseif(greencar_line=2)then		
+							print "green too"					
+							y1=y1-234
+							
+							bluey1=y1
+							bluey2=y1+84
+						elseif(redcar_line=2)then		
+							print "red too"					
+							y1=y1-234
+							
+							bluey1=y1
+							bluey2=y1+84
+						else
+							print "single"
+							y1=-84
+							
+							bluey1=y1
+							bluey2=y1+84
+						endif
+					elseif(street_line$="2")then
+						random_street_position$=str$(ran(4))
+						random_street_position$=left$(random_street_position$,1)
+						//print "random_street_position:"+random_street_position$
+						if(random_street_position$="0")then
+							street_position=330
+						elseif(random_street_position$="1")then
+							street_position=320
+						elseif(random_street_position$="2")then
+							street_position=340
+						elseif(random_street_position$="3")then
+							street_position=310
+						elseif(random_street_position$="4")then
+							street_position=350
+						endif
+						y1=0
+						x1=street_position
+						
+						bluex1=x1
+						bluex2=x1+38
+						
+						bluecar_line=3
+						if(redcar_line=3 and greencar_line=3)then	
+							y1=y1-434
+							
+							bluey1=y1
+							bluey2=y1+84
+						elseif(greencar_line=3)then		
+							print "green too"					
+							y1=y1-234
+							
+							bluey1=y1
+							bluey2=y1+84
+						elseif(redcar_line=3)then
+							print "red too"							
+							y1=y1-234
+							
+							bluey1=y1
+							bluey2=y1+84
+						else
+							print "single"
+							y1=-84
+							
+							bluey1=y1
+							bluey2=y1+84
+						endif
+					endif
+					bluecar=1
+				endif
+			endif
+			
+
+			// GREEN CAR
+			if(random$="2")then
+				if(greencar=1)then
+				else
+					street_line$=str$(ran(2))
+					street_line$=left$(street_line$,1)
+					if(street_line$="0")then
+						random_street_position$=str$(ran(4))
+						random_street_position$=left$(random_street_position$,1)
+						//print "random_street_position:"+random_street_position$
+						
+						//Linke Fahrspur
+						if(random_street_position$="0")then
+							street_position=130
+						elseif(random_street_position$="1")then
+							street_position=120
+						elseif(random_street_position$="2")then
+							street_position=140
+						elseif(random_street_position$="3")then
+							street_position=110
+						elseif(random_street_position$="4")then
+							street_position=150
+						endif
+						y2=0
+						x2=street_position
+						
+						greenx1=x2
+						greenx2=x2+38
+						
+						greencar_line=1
+						
+						if(redcar_line=1 and bluecar_line=1)then
+							print "blue and red too"							
+							y2=y2-434
+							
+							greeny1=y2
+							greeny2=y2+84						
+						elseif(bluecar_line=1)then	
+							print "blue too"						
+							y2=y2-234
+							
+							greeny1=y2
+							greeny2=y2+84	
+						elseif(redcar_line=1)then		
+							print "red too"					
+							y2=y2-234
+							
+							greeny1=y2
+							greeny2=y2+84	
+							
+						else
+							print "single"
+							y2=-84
+							
+							greeny1=y21
+							greeny2=y2+84	
+						endif
+					elseif(street_line$="1")then
+						random_street_position$=str$(ran(4))
+						random_street_position$=left$(random_street_position$,1)
+						//print "random_street_position:"+random_street_position$
+						//Mittlere Fahrspur
+						if(random_street_position$="0")then
+							street_position=230
+						elseif(random_street_position$="1")then
+							street_position=220
+						elseif(random_street_position$="2")then
+							street_position=240
+						elseif(random_street_position$="3")then
+							street_position=210
+						elseif(random_street_position$="4")then
+							street_position=250
+						endif
+						y2=0
+						x2=street_position
+						
+						greenx1=x2
+						greenx2=x2+38
+						
+						greencar_line=2
+						if(redcar_line=2 and bluecar_line=2)then	
+							print "red and blue too"						
+							y2=y2-434
+							
+							greeny1=y2
+							greeny2=y2+84						
+						elseif(bluecar_line=2)then	
+							print "blue too"						
+							y2=y2-234
+							
+							greeny1=y2
+							greeny2=y2+84
+						elseif(redcar_line=2)then
+							print "red too"							
+							y2=y2-234
+							
+							greeny1=y2
+							greeny2=y2+84						
+						else
+							print "single"
+							y2=-84
+							
+							greeny1=y2
+							greeny2=y2+84
+						endif
+					elseif(street_line$="2")then
+						random_street_position$=str$(ran(4))
+						random_street_position$=left$(random_street_position$,1)
+						//print "random_street_position:"+random_street_position$
+						//Rechte Fahrspur
+						if(random_street_position$="0")then
+							street_position=330
+						elseif(random_street_position$="1")then
+							street_position=320
+						elseif(random_street_position$="2")then
+							street_position=340
+						elseif(random_street_position$="3")then
+							street_position=310
+						elseif(random_street_position$="4")then
+							street_position=350
+						endif
+						y2=0
+						x2=street_position
+						
+						greenx1=x2
+						greenx2=x2+38
+						
+						greencar_line=3
+						if(redcar_line=3 and bluecar_line=3)then							
+							print "red and blue too"
+							y2=y2-434
+							
+							greeny1=y2
+							greeny2=y2+84							
+						elseif(bluecar_line=3)then		
+							print "blue too"					
+							y2=y2-234
+							
+							greeny1=y2
+							greeny2=y2+84	
+						elseif(redcar_line=3)then							
+							print "red too"
+							y2=y2-234
+							
+							greeny2=y2
+							greeny2=y2+84							
+						else
+							print "single"
+							y2=-84
+							
+							greeny1=y2
+							greeny2=y2+84
+						endif
+					endif
+					greencar=1
+				endif
+			endif
+		endif
+		
+		// RED CAR
+		if(random$="3")then
+			if(redcar=1)then
+			else
+				street_line$=str$(ran(2))
+				street_line$=left$(street_line$,1)
+				if(street_line$="0")then
+					random_street_position$=str$(ran(4))
+					random_street_position$=left$(random_street_position$,1)
+				//	print "random_street_position:"+random_street_position$
+					if(random_street_position$="0")then
+						street_position=130
+					elseif(random_street_position$="1")then
+						street_position=120
+					elseif(random_street_position$="2")then
+						street_position=140
+					elseif(random_street_position$="3")then
+						street_position=110
+					elseif(random_street_position$="4")then
+						street_position=150
+					endif
+					y3=0
+					x3=street_position
+					
+					redx1=x3
+					redx2=x3+38
+						
+					redcar_line=1
+					
+					if(greencar_line=1 and bluecar_line=1)then							
+						print "green and blue too"
+						y3=y3-434
+						
+						redy1=y3
+						redy2=y3+84					
+					elseif(bluecar_line=1)then		
+						print "blue too"					
+						y3=y3-234
+						
+						redy1=y3
+						redy2=y3+84
+					elseif(greencar_line=1)then
+						print "green too"							
+						y3=y3-234
+						
+						redy1=y3
+						redy2=y3+84					
+					else
+						print "single"
+						y3=-84
+						
+						redy1=y3
+						redy2=y3+84
+					endif
+				elseif(street_line$="1")then
+					random_street_position$=str$(ran(4))
+					random_street_position$=left$(random_street_position$,1)
+				//	print "random_street_position:"+random_street_position$
+					if(random_street_position$="0")then
+						street_position=230
+					elseif(random_street_position$="1")then
+						street_position=220
+					elseif(random_street_position$="2")then
+						street_position=240
+					elseif(random_street_position$="3")then
+						street_position=210
+					elseif(random_street_position$="4")then
+						street_position=250
+					endif
+					y3=0
+					x3=street_position
+					
+					redx1=x3
+					redx2=x3+38
+						
+					redcar_line=2
+					if(bluecar_line=2)then	
+						print "blue too"						
+						y3=y3-234
+						
+						redy1=y3
+						redy2=y3+84
+					elseif(greencar_line=2)then							
+						print "green too"
+						y3=y3-234
+						
+						redy1=y3
+						redy2=y3+84
+					elseif(greencar_line=2 and bluecar_line=2)then							
+						print "green and blue too"
+						y3=y3-334
+						
+						redy1=y3
+						redy2=y3+84
+					else
+						print "single"
+						y3=-84
+						
+						redy1=y3
+						redy2=y3+84
+					endif
+				elseif(street_line$="2")then
+					random_street_position$=str$(ran(4))
+					random_street_position$=left$(random_street_position$,1)
+				//	print "random_street_position:"+random_street_position$
+					if(random_street_position$="0")then
+						street_position=330
+					elseif(random_street_position$="1")then
+						street_position=320
+					elseif(random_street_position$="2")then
+						street_position=340
+					elseif(random_street_position$="3")then
+						street_position=310
+					elseif(random_street_position$="4")then
+						street_position=350
+					endif
+					y3=0
+					x3=street_position
+					
+					redx1=x3
+					redx2=x3+38
+						
+					redcar_line=3
+					if(bluecar_line=3)then	
+						print "blue too"						
+						y3=y3-234
+						
+						redy1=y3
+						redy2=y3+84
+					elseif(greencar_line=3)then							
+						print "green too"
+						y3=y3-234
+						
+						redy1=y3
+						redy2=y3+84
+					elseif(greencar_line=3 and bluecar_line=3)then							
+						print "blue and green too"
+						y3=y3-334
+						
+						redy1=y3
+						redy2=y3+84
+					else
+						print "single"
+						y3=-84
+						
+						redy1=y3
+						redy2=y3+84
+					endif
+				endif
+				redcar=1
+			endif
+		endif
+		
+		
+		
+		// BLUE CAR
+		if(bluecar=1)then
+			draw bitmap x1,y1-5, "car_blank", "copy", "Canvas"
+			draw bitmap x1,y1, "car_blue", "alpha", "Canvas"
+			y1=y1+5
+			bluey1=y1
+			bluey2=bluey1+84
+			
+			if(y1>230)then
+				//Collision blue and player
+				if(carx+38>bluex1)then
+					print "links von blau"
+					if(carx<=bluex2)then
+						if(secure>0)then
+							secure=secure-1
+						else
+							if(life=3)then
+								draw bitmap 5,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=2)
+								draw bitmap 35,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=1)
+								draw bitmap 65,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=0)
+								print "game over"
+								break
+							endif
+						endif
+					endif					
+				endif
+				if(carx<bluex2)then
+					//print "rechts von blau"
+					if(carx+38>=bluex1)then
+						if(secure>0)then
+							secure=secure-1
+						else
+							if(life=3)then
+								draw bitmap 5,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=2)
+								draw bitmap 35,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=1)
+								draw bitmap 65,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=0)
+								print "game over"
+								break
+							endif
+						endif				
+					endif
+				endif	
+			endif
+			
+			//Score
+			//print y1
+			if(y1>450)then
+				bluecar=0
+				bluecar_line=0
+				y1=-184
+			elseif(y1>=385 and y1<=386)then
+				Score=Score+10
+				DRAW FLUSH "ExampleGameplay"
+				DRAW TEXT 10,40, str$(Score), "ExampleGameplay"
+				print Score
+				if(Score=100 or Score=200 or Score=300 or Score=400 or Score=500 or Score=600 or Score=700 or Score=800 or Score=900 or Score=1000)then
+					print "life:"+str$(life)
+					if(life=3)then
+						draw bitmap 5,3, "life_ok", "alpha", "Life"
+						life=life+1
+					elseif(life=2)
+						draw bitmap 35,3, "life_ok", "alpha", "Life"
+						life=life+1
+					elseif(life=1)
+						draw bitmap 65,3, "life_ok", "alpha", "Life"
+						life=life+1
+					endif
+				endif
+			endif
+		endif
+		
+		// GREEN CAR
+		if(greencar=1)then
+			draw bitmap x2,y2-5, "car_blank", "copy", "Canvas"
+			draw bitmap x2,y2, "car_green", "alpha", "Canvas"
+			y2=y2+5
+			greeny1=y2
+			greeny2=greeny1+84
+			
+			if(y1>230)then
+				//Collision green and player
+				if(carx+38>greenx1)then
+					//print "links von grün"
+					if(carx<=greenx2)then
+						if(secure>0)then
+							secure=secure-1
+						else
+							if(life=3)then
+								draw bitmap 5,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=2)
+								draw bitmap 35,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=1)
+								draw bitmap 65,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=0)
+								print "game over"
+								break
+							endif
+						endif
+					endif					
+				endif
+				if(carx<greenx2)then
+					//print "rechts von grün"
+					if(carx+38>=greenx1)then
+						if(secure>0)then
+							secure=secure-1
+						else
+							if(life=3)then
+								draw bitmap 5,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=2)
+								draw bitmap 35,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=1)
+								draw bitmap 65,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=0)
+								print "game over"
+								break
+							endif
+						endif
+					endif
+				endif
+			endif
+			
+			
+			
+			if(y2>450)then
+				greencar=0
+				greencar_line=0
+				y2=-184
+			elseif(y2>=384 and y2<=386)then
+				Score=Score+10
+				DRAW FLUSH "ExampleGameplay"
+				DRAW TEXT 10,40, str$(Score), "ExampleGameplay"
+				print Score
+				if(Score=100 or Score=200 or Score=300 or Score=400 or Score=500 or Score=600 or Score=700 or Score=800 or Score=900 or Score=1000)then
+					print "life:"+str$(life)
+					if(life=3)then
+						draw bitmap 5,3, "life_ok", "alpha", "Life"
+						life=life+1
+					elseif(life=2)
+						draw bitmap 35,3, "life_ok", "alpha", "Life"
+						life=life+1
+					elseif(life=1)
+						draw bitmap 65,3, "life_ok", "alpha", "Life"
+						life=life+1
+					endif
+				endif
+			endif
+		endif
+		
+		// RED CAR
+		if(redcar=1)then
+			draw bitmap x3,y3-5, "car_blank", "copy", "Canvas"
+			draw bitmap x3,y3, "car_red", "alpha", "Canvas"
+			y3=y3+5
+			redy1=y3
+			redy2=redy1+84
+			
+			if(y1>230)then
+				//Collision red and player
+				if(carx+38>redx1)then
+					//print "links von rot"
+					if(carx<=redx2)then
+						if(secure>0)then
+							secure=secure-1
+						else
+							if(life=3)then
+								draw bitmap 5,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=2)
+								draw bitmap 35,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=1)
+								draw bitmap 65,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=0)
+								print "game over"
+								break
+							endif
+						endif
+					endif					
+				endif
+				if(carx<redx2)then
+					//print "rechts von rot"
+					if(carx+38>=redx1)then
+						if(secure>0)then
+							secure=secure-1
+						else
+							if(life=3)then
+								draw bitmap 5,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=2)
+								draw bitmap 35,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=1)
+								draw bitmap 65,3, "life_nk", "alpha", "Life"
+								life=life-1
+								secure=20
+							elseif(life=0)
+								print "game over"
+								break
+							endif
+						endif
+					endif
+				endif
+			endif
+			
+			if(y3>450)then
+				redcar=0
+				redcar_line=0
+				y3=-184
+			elseif(y3>=384 and y3<=386)then
+				Score=Score+10
+				DRAW FLUSH "ExampleGameplay"
+				DRAW TEXT 10,40, str$(Score), "ExampleGameplay"
+				print Score
+				if(Score=100 or Score=200 or Score=300 or Score=400 or Score=500 or Score=600 or Score=700 or Score=800 or Score=900 or Score=1000)then
+					print "life:"+str$(life)
+					wait 4
+					if(life=3)then
+						draw bitmap 5,3, "life_ok", "alpha", "Life"
+						life=life+1
+					elseif(life=2)
+						draw bitmap 35,3, "life_ok", "alpha", "Life"
+						life=life+1
+					elseif(life=1)
+						draw bitmap 65,3, "life_ok", "alpha", "Life"
+						life=life+1
+					endif
+				endif
+			endif
+		endif
+		
+		
+		
+		draw bitmap carx_old,cary, "car_blank", "copy", "Canvas"
+		draw bitmap carx,cary, "car", "alpha", "Canvas"
+
+		//run=run+10
+		run_time=run_time+1
+		
+		
+		redy1=0
+		redy2=0
+		bluey1=0
+		bluey2=0
+		greeny1=0
+		greeny2=0
+		
+		// DRAWINF STREET LINES
+		if(run_time=run_time_value)then
+			if(line_pos1=1)then
+				draw bitmap 198,0, "line", "copy", "Canvas"
+				draw bitmap 298,0, "line", "copy", "Canvas"
+				line_pos1=2
+			else
+				draw bitmap 198,0, "line_blank", "copy", "Canvas"
+				draw bitmap 298,0, "line_blank", "copy", "Canvas"
+				line_pos1=1
+			endif
+				
+			if(line_pos2=1)then
+				draw bitmap 198,60, "line_blank", "copy", "Canvas"
+				draw bitmap 298,60, "line_blank", "copy", "Canvas"
+				line_pos2=2
+			else
+				draw bitmap 198,60, "line", "copy", "Canvas"
+				draw bitmap 298,60, "line", "copy", "Canvas"
+				line_pos2=1
+			endif
+			
+			if(line_pos3=1)then
+				draw bitmap 198,120, "line", "copy", "Canvas"
+				draw bitmap 298,120, "line", "copy", "Canvas"
+				line_pos3=2
+			else
+				draw bitmap 198,120, "line_blank", "copy", "Canvas"
+				draw bitmap 298,120, "line_blank", "copy", "Canvas"
+				line_pos3=1
+			endif
+				
+			if(line_pos4=1)then
+				draw bitmap 198,180, "line_blank", "copy", "Canvas"
+				draw bitmap 298,180, "line_blank", "copy", "Canvas"
+				line_pos4=2
+			else
+				draw bitmap 198,180, "line", "copy", "Canvas"
+				draw bitmap 298,180, "line", "copy", "Canvas"
+				line_pos4=1
+			endif
+			
+			if(line_pos5=1)then
+				draw bitmap 198,240, "line", "copy", "Canvas"
+				draw bitmap 298,240, "line", "copy", "Canvas"				
+				line_pos5=2
+			else
+				draw bitmap 198,240, "line_blank", "copy", "Canvas"
+				draw bitmap 298,240, "line_blank", "copy", "Canvas"
+				line_pos5=1
+			endif
+			
+			// DRAWING STREET LINES - THEN CAR IS DRIVING
+			if(carx<=201 and carx>=166)then
+				if(line_pos5=1)then
+					line_pos6a=1
+				else
+					line_pos6a=2
+				endif
+			else
+				if(line_pos6a=1)then
+					draw bitmap 198,300, "line_blank", "copy", "Canvas"
+					line_pos6a=2
+				else	
+					draw bitmap 198,300, "line", "copy", "Canvas"
+					line_pos6a=1
+				endif
+			endif
+			
+			if(carx<=301 and carx>=266)then
+				if(line_pos5=1)then
+					line_pos6b=1
+				else
+					line_pos6b=2
+				endif
+			else
+				if(line_pos6b=1)then
+					draw bitmap 298,300, "line_blank", "copy", "Canvas"
+					line_pos6b=2
+				else	
+					draw bitmap 298,300, "line", "copy", "Canvas"
+					line_pos6b=1
+				endif
+			endif		
+		
+			run_time=1
+		endif
+	endif
+
+
+	if(window count<1) inloop = false
+
+	sleep 0.1
+
+wend
+	
+

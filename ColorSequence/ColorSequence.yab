@@ -1,0 +1,823 @@
+#!/boot/home/config/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 05.01.2017
+REM Copyright by Christian Albrecht, BeSly Software Solutions
+REM Developer: Christian Albrecht
+
+development=1
+
+ready_to_compile=1
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/Projekte/yab/ExampleMasterMind"
+endif
+
+GFXFolder$=ProgramFolder$+"/gfx"
+GameOpen=0
+
+settings()
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+WINDOW OPEN screenWidth/2-270,screenHeight/2-375 to screenWidth/2+270,screenHeight/2+375, "ColorSequence", "Color Sequence"
+	WINDOW SET "ColorSequence", "Flags", "Not-Zoomable, Not-Minimizable, Not-H-Resizable, Not-V-Resizable, Not-Resizable, No-Workspace-Activation, Accept-First-Click"
+	//WINDOW SET "ColorSequence", "Look", "modal"
+	STACKVIEW 0,0 TO 540,750, "SV-Game", 2, "ColorSequence" 
+		//Ladebildschirm
+		LoadError = DRAW IMAGE 150,0, GFXFolder$+"/logo.gif", "SV-Game1"
+		DRAW TEXT 150,120, "(C) 2019 BeSly Software Solutions (Lelldorin)", "SV-Game1"
+		
+		STACKVIEW 100,200 TO 450, 600, "SV-Menu", 3, "SV-Game1"
+			//Menu
+			BUTTON 0,0 TO 350,40, "BTAboutGame", "About Game", "SV-Menu1"
+			BUTTON 0,60 TO 350,100, "BTStartGameEasy", "Start Game - Easy", "SV-Menu1"
+			BUTTON 0,120 TO 350,160, "BTStartGameHard", "Start Game - Hard", "SV-Menu1"
+			
+			BUTTON 0,180 TO 350,220, "BTQuitGame", "Quit Game", "SV-Menu1"
+			//About
+			TEXTEDIT 1,1 TO 349,340, "TE-AboutGame", 1, "SV-Menu2"
+				TEXTEDIT ADD "TE-AboutGame", "ColorSequence\n\nColorSequence is a Master-Mind clone. As in the original game, the goal here is to guess the colors sequence created by the game.\n\nSelect an empty color area with the mouse in the line marked with the arrow and then press on one of the four colors at the bottom of the game field.\n\nThen press on Check to proofe if your color choice is the right one.\n\nTo the right of the color choice are two rows of dots, this is the indicator that shows you how far you are on the right track.\n\nThe color palette shows how many colors have been chosen correctly. The arrow on the dot indicates how many colors are in the right position."
+			BUTTON 0,359 TO 350,399, "BTMenuBack", "Back to Menu", "SV-Menu2"
+		
+		STACKVIEW 100,680 TO 450,720, "SV-StatusLoading", 2, "SV-Game1"
+			STATUSBAR 0, 0 to 350, 35, "SB-LoadGame", "Generating playground...", "0%", "SV-StatusLoading2"
+			
+			VIEW 0,570 TO 540,640, "VI-ColorsUserSelection", "SV-Game2"
+		
+	STACKVIEW 0,10 TO 400,100, "SV-Colors", 2, "SV-Game2"
+		LoadError = DRAW IMAGE 150,0, GFXFolder$+"/logo.gif", "SV-Colors1"
+		STACKVIEW SET "SV-Colors", 2
+	
+	VIEW 20,470 TO 80,530, "VI-LineSelect", "SV-Game2"
+	
+//Main Loop
+dim part$(1)
+inloop = true
+while(inloop)
+
+msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "") print msg$
+	
+	switch msg$
+	
+	case "BTAboutGame|"
+		STACKVIEW SET "SV-Menu", 2
+		break
+	
+	case "BTMenuBack|"
+		STACKVIEW SET "SV-Menu", 1
+		break
+	
+	case "BTStartGameEasy|"
+		GameLevel$="Easy"
+		OPTION SET "BTAboutGame", "Enabled", false 	
+		OPTION SET "BTStartGameEasy", "Enabled", false 
+		OPTION SET "BTStartGameHard", "Enabled", false 
+		OPTION SET "BTQuitGame", "Enabled", false 
+		if(GameOpen=1)then
+			GameOpen=1
+		else
+			GameOpen=0
+		endif
+		
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "0%", 0
+		STACKVIEW SET "SV-StatusLoading", 2
+		Playground()
+		STACKVIEW SET  "SV-Game", 2
+		break
+	
+	case "BTStartGameHard|"
+		GameLevel$="Hard"
+		OPTION SET "BTAboutGame", "Enabled", false 	
+		OPTION SET "BTStartGameEasy", "Enabled", false 
+		OPTION SET "BTStartGameHard", "Enabled", false 
+		OPTION SET "BTQuitGame", "Enabled", false 
+		if(GameOpen=1)then
+			GameOpen=1
+		else
+			GameOpen=0
+		endif
+		
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "0%", 0
+		STACKVIEW SET "SV-StatusLoading", 2
+		Playground()
+		STACKVIEW SET  "SV-Game", 2
+		break
+	
+	case "BTQuitGame|"
+	case "ColorSequence:_QuitRequested|"
+		WINDOW CLOSE "ColorSequence"
+		break
+	
+	//Select Empty Fields
+	case "BT:"+PartTwo$+":"+PartThree$+"|"
+		if(PartTwo$="Color")then
+			if(SelectedBlank$="not selected")then
+			else
+				VIEW REMOVE "VI-"+SelectedBlank$
+				GetPosition()
+				VIEW xpos,ypos TO xpos+61,ypos+61, "VI-"+SelectedBlank$, "SV-Game2"
+					BUTTON IMAGE 1,1, "BT:"+SelectedBlank$, GFXFolder$+"/"+PartThree$+".gif", GFXFolder$+"/"+PartThree$+".gif", GFXFolder$+"/"+PartThree$+".gif", "VI-"+SelectedBlank$
+					UserSelectedColor$=PartThree$
+					GetUserColor()
+			endif	
+		elseif(PartTwo$="Check")then
+			CheckPressed=CheckPressed+1
+			CountCorrectFields=0
+			print ComputerColor1$
+			print UserSelectedColor1$
+			print ComputerColor2$
+			print UserSelectedColor2$
+			print ComputerColor3$
+			print UserSelectedColor3$
+			print ComputerColor4$
+			print UserSelectedColor4$
+			
+			wait 2
+			if(ComputerColor1$=UserSelectedColor1$)then
+				CountCorrectFields=CountCorrectFields+1
+				GameReady=GameReady+1
+			endif
+			if(ComputerColor2$=UserSelectedColor2$)then
+				CountCorrectFields=CountCorrectFields+1
+				GameReady=GameReady+1
+			endif
+			if(ComputerColor3$=UserSelectedColor3$)then
+				CountCorrectFields=CountCorrectFields+1
+				GameReady=GameReady+1
+			endif
+			if(ComputerColor4$=UserSelectedColor4$)then
+				CountCorrectFields=CountCorrectFields+1
+				GameReady=GameReady+1
+			endif
+			
+			//print "CountCorrectFields:"+str$(CountCorrectFields)
+			
+			CountCurrectColors=0
+			if(UsrCountRed>=SysCountRed)then
+				CountCurrectColors=CountCurrectColors+SysCountRed
+			else
+				CountCurrectColors=CountCurrectColors+UsrCountRed
+			endif
+			if(UsrCountBlue>=SysCountBlue)then
+				CountCurrectColors=CountCurrectColors+SysCountBlue
+			else
+				CountCurrectColors=CountCurrectColors+UsrCountBlue
+			endif
+			if(UsrCountMagenta>=SysCountMagenta)then
+				CountCurrectColors=CountCurrectColors+SysCountMagenta
+			else
+				CountCurrectColors=CountCurrectColors+UsrCountMagenta
+			endif
+			if(UsrCountGreen>=SysCountGreen)then
+				CountCurrectColors=CountCurrectColors+SysCountGreen
+			else
+				CountCurrectColors=CountCurrectColors+UsrCountGreen
+			endif	
+			if(UsrCountYellow>=SysCountYellow)then
+				CountCurrectColors=CountCurrectColors+SysCountYellow
+			else
+				CountCurrectColors=CountCurrectColors+SysCountYellow
+			endif	
+			
+			//Remove and Create Check Views
+			if(PlayLine=6)then
+				VIEW REMOVE "VI-6:0"
+				VIEW 450,480 TO 680,520, "VI-6:0", "SV-Game2"
+			elseif(PlayLine=5)then
+				VIEW REMOVE "VI-5:0"
+				VIEW 450,410 TO 680,450, "VI-5:0", "SV-Game2"
+			elseif(PlayLine=4)then
+				VIEW REMOVE "VI-4:0"
+				VIEW 450,340 TO 680,380, "VI-4:0", "SV-Game2"
+			elseif(PlayLine=3)then
+				VIEW REMOVE "VI-3:0"
+				VIEW 450,270 TO 680,310, "VI-3:0", "SV-Game2"
+			elseif(PlayLine=2)then
+				VIEW REMOVE "VI-2:0"
+				VIEW 450,200 TO 680,240, "VI-2:0", "SV-Game2"
+			elseif(PlayLine=1)then
+				VIEW REMOVE "VI-1:0"
+				VIEW 450,130 TO 680,170, "VI-1:0", "SV-Game2"
+			endif	
+			
+			//Display right entries
+			k1=0
+			x3=0
+			for k1 = 1 to 4
+				if(k1<=CountCurrectColors)then
+					LoadError = DRAW IMAGE x3,0, GFXFolder$+"/check2.gif", "VI-"+str$(PlayLine)+":0"
+				else
+					LoadError = DRAW IMAGE x3,0, GFXFolder$+"/check1.gif", "VI-"+str$(PlayLine)+":0"
+				endif
+				x3=x3+20
+			next k1			
+			k2=0
+			x3=0
+			for k2 = 1 to 4
+				if(k2<=CountCorrectFields)then						
+					LoadError = DRAW IMAGE x3,30, GFXFolder$+"/check2.gif", "VI-"+str$(PlayLine)+":0"				
+				else
+					LoadError = DRAW IMAGE x3,30, GFXFolder$+"/check1.gif", "VI-"+str$(PlayLine)+":0"
+				endif
+				x3=x3+20
+			next k2
+			
+			//print "GameReady:"+str$(GameReady)
+			
+			
+			if(GameReady=4)then
+				STACKVIEW SET "SV-Colors", 2		//Lösung Anzeigen
+				//End of Game
+				AlertSelected = ALERT "You have won!!!", "Ok", "", "", "info"
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "0%", 0
+				STACKVIEW SET "SV-StatusLoading", 1
+				OPTION SET "BTAboutGame", "Enabled", true 	
+				OPTION SET "BTStartGameEasy", "Enabled", true 
+				OPTION SET "BTStartGameHard", "Enabled", true 
+				OPTION SET "BTQuitGame", "Enabled", true 
+				if(AlertSelected=1)then
+					//AlertSelected=0
+					STACKVIEW SET "SV-Game", 1		//Lösung verbergen
+					settings()		
+					GameReady=0
+					CheckPressed=0
+					RemoveButtonViews()
+					STACKVIEW SET "SV-Colors", 1
+				endif
+			elseif(CheckPressed=6)
+				STACKVIEW SET "SV-Colors", 2		//Lösung Anzeigen	
+				//End of Game	
+				AlertSelected = ALERT "You loose!!!", "Ok", "", "", "info"
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "0%", 0
+				STACKVIEW SET "SV-StatusLoading", 1
+				OPTION SET "BTAboutGame", "Enabled", true 	
+				OPTION SET "BTStartGameEasy", "Enabled", true 
+				OPTION SET "BTStartGameHard", "Enabled", true 
+				OPTION SET "BTQuitGame", "Enabled", true 
+				if(AlertSelected=1)then
+					//AlertSelected=0
+					STACKVIEW SET "SV-Game", 1		//Lösung verbergen
+					settings()		
+					GameReady=0
+					CheckPressed=0
+					RemoveButtonViews()
+					STACKVIEW SET "SV-Colors", 1
+				endif
+			else
+				GameReady=0
+				//Disable Buttons
+				if(PlayLine=6)then
+					PlayLine=5
+					EnableDisable()
+				elseif(PlayLine=5)then
+					PlayLine=4
+					EnableDisable()
+				elseif(PlayLine=4)then
+					PlayLine=3
+					EnableDisable()
+				elseif(PlayLine=3)then
+					PlayLine=2
+					EnableDisable()
+				elseif(PlayLine=2)then
+					PlayLine=1
+					EnableDisable()
+				else
+				endif	
+			endif
+			
+			UserSelectedColor1$=""
+			UserSelectedColor2$=""
+			UserSelectedColor3$=""
+			UserSelectedColor4$=""
+			UsrCountRed=0
+			UsrCountBlue=0
+			UsrCountMagenta=0
+			UsrCountGreen=0	
+			UsrCountYellow=0			
+		else
+			SelectedBlank$=PartTwo$+":"+PartThree$		
+			for i = 1 to 5 
+				DRAW SET "BGColor", 216,216,216, "VI-"+str$(i)+":1"
+				DRAW SET "BGColor", 216,216,216, "VI-"+str$(i)+":2"
+				DRAW SET "BGColor", 216,216,216, "VI-"+str$(i)+":3"
+				DRAW SET "BGColor", 216,216,216, "VI-"+str$(i)+":4"
+			next i
+			print "VI-"+PartTwo$+":"+PartThree$
+			DRAW SET "BGColor", 255,255,255, "VI-"+PartTwo$+":"+PartThree$
+		endif
+		break
+	
+	
+	
+	default:
+	
+	end switch
+	
+	if(window count<1) inloop = false
+	sleep 0.05
+wend
+
+sub Playground()		//Generiere Spielfläche
+	if(GameLevel$="Easy")then
+		DRAW FLUSH "SV-Game2"
+		//1=red
+		//2=blue
+		//3=magenta
+		//4=green
+	
+		i=0
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "10%", 10
+		//Generating random Colors
+		for i = 1 to 1
+			ComputerColor1$=left$(str$(ran(5)), 1)
+				GetComputerColor$=ComputerColor1$
+				GetComputerColor()
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "15%", 15
+				ComputerColor1$=GetComputerColor$
+			ComputerColor2$=left$(str$(ran(5)), 1)
+				GetComputerColor$=ComputerColor2$
+				GetComputerColor()
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "20%", 20
+				ComputerColor2$=GetComputerColor$
+			ComputerColor3$=left$(str$(ran(5)), 1)
+				GetComputerColor$=ComputerColor3$
+				GetComputerColor()
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "25%", 25
+				ComputerColor3$=GetComputerColor$
+			ComputerColor4$=left$(str$(ran(5)), 1)
+				GetComputerColor$=ComputerColor4$
+				GetComputerColor()
+				ComputerColor4$=GetComputerColor$
+			if(ComputerColor1$="0" or ComputerColor2$="0" or ComputerColor3$="0" or ComputerColor4$="0")then
+				i=i-1
+			endif
+		next i
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "30%", 30
+		wait 0.3
+		//Generating verdecke Farb-Sequence
+		if(ComputerColor1$="red")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor1$="blue")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/blue.gif", "SV-Colors2" 
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor1$="magenta")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor1$="green")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		endif
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "35%", 35
+		wait 0.3
+		if(ComputerColor2$="red")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor2$="blue")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/blue.gif", "SV-Colors2"
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor2$="magenta")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor2$="green")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		endif
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "40%", 40
+		wait 0.3
+		if(ComputerColor3$="red")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor3$="blue")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/blue.gif", "SV-Colors2"
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor3$="magenta")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor3$="green")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		endif
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "45%", 45
+		wait 0.3
+		if(ComputerColor4$="red")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor4$="blue")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/blue.gif", "SV-Colors2"
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor4$="magenta")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor4$="green")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		endif
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "50%", 50
+		wait 0.3
+		j=0
+		y2=130	
+		for j = 1 to 6	
+			LoadError = DRAW IMAGE 400,y2-5, GFXFolder$+"/colors.gif", "SV-Game2"
+			LoadError = DRAW IMAGE 400,y2+25, GFXFolder$+"/position.gif", "SV-Game2"
+	
+			VIEW 450,y2 TO 680,y2+40, "VI-"+str$(j)+":0", "SV-Game2"
+				LoadError = DRAW IMAGE 0,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 20,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 40,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 60,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+			
+				LoadError = DRAW IMAGE 0,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 20,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 40,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 60,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"			
+			y2=y2+70	
+		next j
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "60%", 60
+
+		wait 0.5
+		CreateButtonViews()	
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "75%", 75
+		VIEW REMOVE "VI-ColorsUserSelection"
+		VIEW 0,570 TO 540,640, "VI-ColorsUserSelection", "SV-Game2"
+			BUTTON IMAGE 100,0, "BT:Color:red", GFXFolder$+"/red.gif", GFXFolder$+"/red.gif", GFXFolder$+"/red.gif", "VI-ColorsUserSelection"
+			BUTTON IMAGE 170,0, "BT:Color:blue", GFXFolder$+"/blue.gif", GFXFolder$+"/blue.gif", GFXFolder$+"/blue.gif", "VI-ColorsUserSelection"
+			BUTTON IMAGE 240,0, "BT:Color:magenta", GFXFolder$+"/magenta.gif", GFXFolder$+"/magenta.gif", GFXFolder$+"/magenta.gif", "VI-ColorsUserSelection"
+			BUTTON IMAGE 310,0, "BT:Color:green", GFXFolder$+"/green.gif", GFXFolder$+"/green.gif", GFXFolder$+"/green.gif", "VI-ColorsUserSelection"
+
+		BUTTON 100,670 TO 370,730, "BT:Check:Go", "Check Colors", "SV-Game2"
+	
+		PlayLine=6
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "85%", 85
+		wait 0.5
+		EnableDisable()	
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "100%", 100
+		wait 0.5
+	elseif(GameLevel$="Hard")then
+		DRAW FLUSH "SV-Game2"
+		//1=red
+		//2=blue
+		//3=magenta
+		//4=green
+		//5=yello
+	
+		i=0
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "10%", 10
+		//Generating random Colors
+		for i = 1 to 1
+			ComputerColor1$=left$(str$(ran(6)), 1)
+				GetComputerColor$=ComputerColor1$
+				GetComputerColor()
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "15%", 15
+				ComputerColor1$=GetComputerColor$
+			ComputerColor2$=left$(str$(ran(6)), 1)
+				GetComputerColor$=ComputerColor2$
+				GetComputerColor()
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "20%", 20
+				ComputerColor2$=GetComputerColor$
+			ComputerColor3$=left$(str$(ran(6)), 1)
+				GetComputerColor$=ComputerColor3$
+				GetComputerColor()
+				STATUSBAR SET "SB-LoadGame", "Generating playground...", "25%", 25
+				ComputerColor3$=GetComputerColor$
+			ComputerColor4$=left$(str$(ran(6)), 1)
+				GetComputerColor$=ComputerColor4$
+				GetComputerColor()
+				ComputerColor4$=GetComputerColor$
+			if(ComputerColor1$="0" or ComputerColor2$="0" or ComputerColor3$="0" or ComputerColor4$="0" or ComputerColor5$="0")then
+				i=i-1
+			endif
+		next i
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "30%", 30
+		wait 0.3
+		//Generating verdecke Farb-Sequence
+		if(ComputerColor1$="red")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor1$="blue")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/blue.gif", "SV-Colors2" 
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor1$="magenta")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor1$="green")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		elseif(ComputerColor1$="yellow")then
+			LoadError = DRAW IMAGE 100,0, GFXFolder$+"/yellow.gif", "SV-Colors2" 
+			SysCountYellow=SysCountYellow+1
+		endif
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "35%", 35
+		wait 0.3
+		if(ComputerColor2$="red")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor2$="blue")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/blue.gif", "SV-Colors2"
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor2$="magenta")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor2$="green")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		elseif(ComputerColor2$="yellow")then
+			LoadError = DRAW IMAGE 170,0, GFXFolder$+"/yellow.gif", "SV-Colors2" 
+			SysCountYellow=SysCountYellow+1
+		endif
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "40%", 40
+		wait 0.3
+		if(ComputerColor3$="red")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor3$="blue")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/blue.gif", "SV-Colors2"
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor3$="magenta")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor3$="green")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		elseif(ComputerColor3$="yellow")then
+			LoadError = DRAW IMAGE 240,0, GFXFolder$+"/yellow.gif", "SV-Colors2" 
+			SysCountYellow=SysCountYellow+1
+		endif
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "45%", 45
+		wait 0.3
+		if(ComputerColor4$="red")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/red.gif", "SV-Colors2"
+			SysCountRed=SysCountRed+1
+		elseif(ComputerColor4$="blue")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/blue.gif", "SV-Colors2"
+			SysCountBlue=SysCountBlue+1
+		elseif(ComputerColor4$="magenta")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/magenta.gif", "SV-Colors2"
+			SysCountMagenta=SysCountMagenta+1
+		elseif(ComputerColor4$="green")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/green.gif", "SV-Colors2" 
+			SysCountGreen=SysCountGreen+1
+		elseif(ComputerColor4$="yellow")then
+			LoadError = DRAW IMAGE 310,0, GFXFolder$+"/yellow.gif", "SV-Colors2" 
+			SysCountYellow=SysCountYellow+1
+		endif
+		
+		
+		print "red:"+str$(SysCountRed)
+		print "blue:"+str$(SysCountBlue)
+		print "magenta:"+str$(SysCountMagenta)
+		print "green:"+str$(SysCountGreen)
+		print "yellow:"+str$(SysCountYellow)
+		wait 2
+		
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "50%", 50
+		wait 0.3
+		j=0
+		y2=130	
+		for j = 1 to 6	
+			LoadError = DRAW IMAGE 400,y2-5, GFXFolder$+"/colors.gif", "SV-Game2"
+			LoadError = DRAW IMAGE 400,y2+25, GFXFolder$+"/position.gif", "SV-Game2"
+	
+			VIEW 450,y2 TO 680,y2+40, "VI-"+str$(j)+":0", "SV-Game2"
+				LoadError = DRAW IMAGE 0,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 20,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 40,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 60,0, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+			
+				LoadError = DRAW IMAGE 0,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 20,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 40,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"
+				LoadError = DRAW IMAGE 60,30, GFXFolder$+"/check1.gif", "VI-"+str$(j)+":0"			
+			y2=y2+70	
+		next j
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "60%", 60
+
+		wait 0.5
+		CreateButtonViews()	
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "75%", 75
+		VIEW REMOVE "VI-ColorsUserSelection"
+		VIEW 0,570 TO 540,640, "VI-ColorsUserSelection", "SV-Game2"
+		BUTTON IMAGE 80,0, "BT:Color:red", GFXFolder$+"/red.gif", GFXFolder$+"/red.gif", GFXFolder$+"/red.gif", "VI-ColorsUserSelection"
+		BUTTON IMAGE 150,0, "BT:Color:blue", GFXFolder$+"/blue.gif", GFXFolder$+"/blue.gif", GFXFolder$+"/blue.gif", "VI-ColorsUserSelection"
+		BUTTON IMAGE 220,0, "BT:Color:magenta", GFXFolder$+"/magenta.gif", GFXFolder$+"/magenta.gif", GFXFolder$+"/magenta.gif", "VI-ColorsUserSelection"
+		BUTTON IMAGE 290,0, "BT:Color:green", GFXFolder$+"/green.gif", GFXFolder$+"/green.gif", GFXFolder$+"/green.gif", "VI-ColorsUserSelection"
+		BUTTON IMAGE 360,0, "BT:Color:yellow", GFXFolder$+"/yellow.gif", GFXFolder$+"/yellow.gif", GFXFolder$+"/yellow.gif", "VI-ColorsUserSelection"
+
+		
+		BUTTON 100,670 TO 370,730, "BT:Check:Go", "Check Colors", "SV-Game2"
+	
+		PlayLine=6
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "85%", 85
+		wait 0.5
+		EnableDisable()	
+		STATUSBAR SET "SB-LoadGame", "Generating playground...", "100%", 100
+		wait 0.5
+	endif
+end sub
+
+sub GetComputerColor()
+	if(GameLevel$="Easy")then
+		//ComputerColor1$=GetComputerColor$
+		//1=red
+		//2=blue
+		//3=magenta
+		//4=green
+		if(GetComputerColor$="1")then
+			GetComputerColor$="red"
+		elseif(GetComputerColor$="2")then
+			GetComputerColor$="blue"
+		elseif(GetComputerColor$="3")then
+			GetComputerColor$="magenta"
+		elseif(GetComputerColor$="4")then
+			GetComputerColor$="green"
+		endif
+	elseif(GameLevel$="Hard")then
+		//ComputerColor1$=GetComputerColor$
+		//1=red
+		//2=blue
+		//3=magenta
+		//4=green
+		//5=yellow
+		if(GetComputerColor$="1")then
+			GetComputerColor$="red"
+		elseif(GetComputerColor$="2")then
+			GetComputerColor$="blue"
+		elseif(GetComputerColor$="3")then
+			GetComputerColor$="magenta"
+		elseif(GetComputerColor$="4")then
+			GetComputerColor$="green"
+		elseif(GetComputerColor$="5")then
+			GetComputerColor$="yellow"
+		endif
+	
+	endif
+end sub
+
+sub GetPosition()
+	if(left$(SelectedBlank$,1) = "1")then
+		ypos=120
+	elseif(left$(SelectedBlank$,1) = "2")then
+		ypos=190
+	elseif(left$(SelectedBlank$,1) = "3")then
+		ypos=260
+	elseif(left$(SelectedBlank$,1) = "4")then
+		ypos=330
+	elseif(left$(SelectedBlank$,1) = "5")then
+		ypos=400
+	elseif(left$(SelectedBlank$,1) = "6")then
+		ypos=470
+	endif 
+	if(right$(SelectedBlank$,1) = "1")then
+		xpos=100
+	elseif(right$(SelectedBlank$,1) = "2")then
+		xpos=170
+	elseif(right$(SelectedBlank$,1) = "3")then
+		xpos=240
+	elseif(right$(SelectedBlank$,1) = "4")then
+		xpos=310
+	endif		
+end sub
+
+sub GetUserColor()
+	if(GameLevel$="Easy")then
+		if(right$(SelectedBlank$,1) = "1")then
+			UserSelectedColor1$=UserSelectedColor$
+		elseif(right$(SelectedBlank$,1) = "2")then
+			UserSelectedColor2$=UserSelectedColor$
+		elseif(right$(SelectedBlank$,1) = "3")then
+			UserSelectedColor3$=UserSelectedColor$	
+		elseif(right$(SelectedBlank$,1) = "4")then
+			UserSelectedColor4$=UserSelectedColor$
+		endif
+		if(UserSelectedColor$="red")then
+			UsrCountRed=UsrCountRed+1	
+		elseif(UserSelectedColor$="blue")then
+			UsrCountBlue=UsrCountBlue+1		
+		elseif(UserSelectedColor$="magenta")then
+			UsrCountMagenta=UsrCountMagenta+1
+		elseif(UserSelectedColor$="green")then
+			UsrCountGreen=UsrCountGreen+1
+		endif	
+	elseif(GameLevel$="Hard")then
+		if(right$(SelectedBlank$,1) = "1")then
+			UserSelectedColor1$=UserSelectedColor$
+		elseif(right$(SelectedBlank$,1) = "2")then
+			UserSelectedColor2$=UserSelectedColor$
+		elseif(right$(SelectedBlank$,1) = "3")then
+			UserSelectedColor3$=UserSelectedColor$	
+		elseif(right$(SelectedBlank$,1) = "4")then
+			UserSelectedColor4$=UserSelectedColor$
+		elseif(right$(SelectedBlank$,1) = "5")then
+			UserSelectedColor5$=UserSelectedColor$
+		endif
+		if(UserSelectedColor$="red")then
+			UsrCountRed=UsrCountRed+1	
+		elseif(UserSelectedColor$="blue")then
+			UsrCountBlue=UsrCountBlue+1		
+		elseif(UserSelectedColor$="magenta")then
+			UsrCountMagenta=UsrCountMagenta+1
+		elseif(UserSelectedColor$="green")then
+			UsrCountGreen=UsrCountGreen+1
+		elseif(UserSelectedColor$="yellow")then
+			UsrCountYellow=UsrCountYellow+1
+		endif	
+	endif
+end sub
+
+sub EnableDisable()
+	local i
+	for i = 1 to 6
+		OPTION SET "BT:"+str$(i)+":1", "Enabled", false
+		OPTION SET "BT:"+str$(i)+":2", "Enabled", false
+		OPTION SET "BT:"+str$(i)+":3", "Enabled", false
+		OPTION SET "BT:"+str$(i)+":4", "Enabled", false
+	next i
+	OPTION SET "BT:"+str$(PlayLine)+":1", "Enabled", true
+	OPTION SET "BT:"+str$(PlayLine)+":2", "Enabled", true
+	OPTION SET "BT:"+str$(PlayLine)+":3", "Enabled", true
+	OPTION SET "BT:"+str$(PlayLine)+":4", "Enabled", true
+	if(PlayLine=6)then
+		VIEW REMOVE "VI-LineSelect"
+		VIEW 20,470 TO 80,530, "VI-LineSelect", "SV-Game2"
+			LoadError = DRAW IMAGE 0,0, GFXFolder$+"/lineselect.gif", "VI-LineSelect"
+	elseif(PlayLine=5)then
+		VIEW REMOVE "VI-LineSelect"
+		VIEW 20,400 TO 80,460, "VI-LineSelect", "SV-Game2"
+			LoadError = DRAW IMAGE 0,0, GFXFolder$+"/lineselect.gif", "VI-LineSelect"
+	elseif(PlayLine=4)then
+		VIEW REMOVE "VI-LineSelect"
+		VIEW 20,330 TO 80,390, "VI-LineSelect", "SV-Game2"
+			LoadError = DRAW IMAGE 0,0, GFXFolder$+"/lineselect.gif", "VI-LineSelect"
+	elseif(PlayLine=3)then
+		VIEW REMOVE "VI-LineSelect"
+		VIEW 20,260 TO 80,390, "VI-LineSelect", "SV-Game2"
+			LoadError = DRAW IMAGE 0,0, GFXFolder$+"/lineselect.gif", "VI-LineSelect"
+	elseif(PlayLine=2)then
+		VIEW REMOVE "VI-LineSelect"
+		VIEW 20,190 TO 80,390, "VI-LineSelect", "SV-Game2"
+			LoadError = DRAW IMAGE 0,0, GFXFolder$+"/lineselect.gif", "VI-LineSelect"
+	elseif(PlayLine=1)then
+		VIEW REMOVE "VI-LineSelect"
+		VIEW 20,120 TO 80,390, "VI-LineSelect", "SV-Game2"
+			LoadError = DRAW IMAGE 0,0, GFXFolder$+"/lineselect.gif", "VI-LineSelect"
+	endif
+end sub
+
+sub settings()
+	SelectedBlank$="not selected"
+	SysCountRed=0
+	SysCountBlue=0
+	SysCountMagenta=0
+	SysCountGreen=0
+	SysCountYellow=0
+	UsrCountRed=0
+	UsrCountBlue=0
+	UsrCountMagenta=0
+	UsrCountGreen=0
+	UsrCountYellow=0
+end sub
+
+sub CreateButtonViews()
+	i=0
+	y1=120	
+	for i = 1 to 6
+		VIEW 100,y1 TO 161,y1+61, "VI-"+str$(i)+":1", "SV-Game2"
+			BUTTON IMAGE 1,1, "BT:"+str$(i)+":1", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", "VI-"+str$(i)+":1"
+				OPTION SET "BT:"+str$(i)+":1", "Enabled", false
+		VIEW 170,y1 TO 231,y1+61, "VI-"+str$(i)+":2", "SV-Game2"
+			BUTTON IMAGE 1,1, "BT:"+str$(i)+":2", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", "VI-"+str$(i)+":2"
+				OPTION SET "BT:"+str$(i)+":2", "Enabled", false
+		VIEW 240,y1 TO 301,y1+61, "VI-"+str$(i)+":3", "SV-Game2"
+			BUTTON IMAGE 1,1, "BT:"+str$(i)+":3", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", "VI-"+str$(i)+":3"
+				OPTION SET "BT:"+str$(i)+":3", "Enabled", false
+		VIEW 310,y1 TO 371,y1+61, "VI-"+str$(i)+":4", "SV-Game2"
+			BUTTON IMAGE 1,1, "BT:"+str$(i)+":4", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", GFXFolder$+"/blank.gif", "VI-"+str$(i)+":4"
+				OPTION SET "BT:"+str$(i)+":4", "Enabled", false
+		y1=y1+70			
+	next i
+end sub
+
+sub RemoveButtonViews()
+	for i = 1 to 6
+		VIEW REMOVE "VI-"+str$(i)+":1"
+		VIEW REMOVE "VI-"+str$(i)+":2"
+		VIEW REMOVE "VI-"+str$(i)+":3"
+		VIEW REMOVE "VI-"+str$(i)+":4"	
+	next i
+end sub

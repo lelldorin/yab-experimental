@@ -1,0 +1,487 @@
+#!/boot/home/config/bin/yab
+REM Requires yab v 1.7
+REM Start of Creating 31.03.2018
+REM Lelldorin
+
+ready_to_compile=1
+if(ready_to_compile=1)then
+	if (peek("isbound")) then
+		ProgramFolder$ = peek$("directory")
+		else
+		ProgramFolder$ = system$("pwd")
+		ProgramFolder$ = left$(ProgramFolder$, len(ProgramFolder$)-1)
+	fi
+else
+	ProgramFolder$="/SharedBFS/projects/yab/Check2DArray"
+endif
+
+screenWidth = peek("desktopwidth")
+screenHeight = peek("desktopheight")
+
+model_position=1
+model_direction$="down"
+
+
+WINDOW OPEN screenWidth/2-400,screenHeight/2-150 to screenWidth/2+400,screenHeight/2+150, "Check2DArray", "Playground Fixed"
+	WINDOW SET "Check2DArray",  "Flags", "Not-Resizable,Not-Zoomable"
+	
+	DRAW TEXT 5,15, "Textfile", "Check2DArray"
+	VIEW 0,20 TO 269,280, "VI:Text", "Check2DArray"
+		//DRAW SET "BGColor", 100,10,100, "VI:Text"
+		TEXTEDIT 5,5 TO 264,255, "TE:Text", 3, "VI:Text"
+			TEXTEDIT SET "TE:Text",  "wordwrap", false
+			TEXTEDIT SET "TE:Text", "align", "center"
+			
+	DRAW TEXT 280,15, "Array", "Check2DArray"		
+	VIEW 270,20 TO 539,280, "VI:Array", "Check2DArray"
+		//DRAW SET "BGColor", 50,30,60, "VI:Array"
+		TEXTEDIT 10,5 TO 90,85, "TE:1-1", 0, "VI:Array"
+			TEXTEDIT SET "TE:1-1", "align", "center"
+		TEXTEDIT 95,5 TO 175,85, "TE:1-2", 0, "VI:Array"
+			TEXTEDIT SET "TE:1-2", "align", "center"
+		TEXTEDIT 180,5 TO 260,85, "TE:1-3", 0, "VI:Array"
+			TEXTEDIT SET "TE:1-3", "align", "center"
+			
+		TEXTEDIT 10,90 TO 90,170, "TE:2-1", 0, "VI:Array"
+			TEXTEDIT SET "TE:2-1", "align", "center"
+		TEXTEDIT 95,90 TO 175,170, "TE:2-2", 0, "VI:Array"
+			TEXTEDIT SET "TE:2-2", "align", "center"
+		TEXTEDIT 180,90 TO 260,170, "TE:2-3", 0, "VI:Array"
+			TEXTEDIT SET "TE:2-3", "align", "center"
+		
+		TEXTEDIT 10,175 TO 90,255, "TE:3-1", 0, "VI:Array"
+			TEXTEDIT SET "TE:3-1", "align", "center"
+		TEXTEDIT 95,175 TO 175,255, "TE:3-2", 0, "VI:Array"
+			TEXTEDIT SET "TE:3-2", "align", "center"
+		TEXTEDIT 180,175 TO 260,255, "TE:3-3", 0, "VI:Array"
+			TEXTEDIT SET "TE:3-3", "align", "center"
+			
+	DRAW TEXT 545,15, "Playground", "Check2DArray"			
+	VIEW 540,20 TO 810,280, "VI:Playground","Check2DArray"
+		DRAW SET "BGColor", 216,216,216, "Check2DArray"
+		//DRAW SET "BGColor", 100,10,100, "VI:Playground"
+		CANVAS 5,5 to 255,250, "Canvas", "VI:Playground"
+			
+		bitmap 83,83, "gras"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/gras.bmp", "gras"
+		
+		bitmap 83,83, "tree"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/tree.png", "tree"
+		
+		bitmap 83,83, "kira_front1"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_front1.png", "kira_front1"
+		bitmap 83,83, "kira_front2"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_front2.png", "kira_front2"
+		
+		bitmap 83,83, "kira_back1"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_back1.png", "kira_back1"
+		bitmap 83,83, "kira_back2"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_back2.png", "kira_back2"
+		
+		bitmap 83,83, "kira_left1"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_left1.png", "kira_left1"
+		bitmap 83,83, "kira_left2"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_left2.png", "kira_left2"
+		
+		bitmap 83,83, "kira_right1"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_right1.png", "kira_right1"
+		bitmap 83,83, "kira_right2"
+		err = draw image 0,0 to 83,83, ProgramFolder$+"/data/gfx/kira_right2.png", "kira_right2"
+		
+		ReadoutField()
+		
+		GenerateArray()	
+
+		WriteBitmaps()
+	
+				
+		
+		
+		
+//Main Loop
+dim part$(1)
+inloop = true
+while(inloop)
+
+	OPTION SET "Check2DArray", "Focus", 1
+	keymsg$ = keyboard message$("Check2DArray")
+	//print keymsg$ 
+		
+	if(keymsg$<>"" and keymsgs$<>old_keymsg$) then 
+		old_keymsg$ = keymsg$
+	endif
+	
+	switch(keymsg$)
+		case "w"
+		case "up"
+			print "up"
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			print str$(PlayerPositionLeft)+":"+str$(PlayerPositionRight)
+			model_direction$="up"
+					
+			if(left$(PlayerPosition$,1)="1")then
+				print "up 1"
+				WriteBitmaps()
+				ReloadArray()
+			else
+				if(Playground$(PlayerPositionLeft-1,PlayerPositionRight)="t")then
+					print "tree"
+					WriteBitmaps()
+					ReloadArray()
+				else
+					print "gras"
+					Playground$(PlayerPositionLeft,PlayerPositionRight)="g"
+					Playground$(PlayerPositionLeft-1,PlayerPositionRight)="p"
+					
+					WriteBitmaps()
+					ReloadArray()
+				endif
+			endif
+			break
+		
+		case "a"	
+		case "left"
+			print "left"
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			print str$(PlayerPositionLeft)+":"+str$(PlayerPositionRight)
+			model_direction$="left"
+			
+			if(right$(PlayerPosition$,1)="1")then
+				print "right 1"
+				WriteBitmaps()
+					ReloadArray()
+			else
+				if(Playground$(PlayerPositionLeft,PlayerPositionRight-1)="t")then
+					print "tree"
+					WriteBitmaps()
+					ReloadArray()
+				else
+					print "gras"
+					Playground$(PlayerPositionLeft,PlayerPositionRight)="g"
+					Playground$(PlayerPositionLeft,PlayerPositionRight-1)="p"
+					
+					WriteBitmaps()
+					ReloadArray()
+				endif
+			endif
+			break
+			
+		case "s"	
+		case "down"
+			print "down"
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			print str$(PlayerPositionLeft)+":"+str$(PlayerPositionRight)
+			model_direction$="down"
+			
+			if(left$(PlayerPosition$,1)="3")then
+				print "up 1"
+				WriteBitmaps()
+				ReloadArray()
+			else
+				if(Playground$(PlayerPositionLeft+1,PlayerPositionRight)="t")then
+					print "tree"
+					WriteBitmaps()
+					ReloadArray()
+				else
+					print "gras"
+					Playground$(PlayerPositionLeft,PlayerPositionRight)="g"
+					Playground$(PlayerPositionLeft+1,PlayerPositionRight)="p"
+					
+					WriteBitmaps()
+					ReloadArray()
+				endif
+			endif
+			break
+			
+		case "d"	
+		case "right"
+			print "right"
+			PlayerPositionLeft=val(left$(PlayerPosition$,1))
+			PlayerPositionRight=val(right$(PlayerPosition$,1))
+			print str$(PlayerPositionLeft)+":"+str$(PlayerPositionRight)
+			model_direction$="right"
+			
+			if(right$(PlayerPosition$,1)="3")then
+				print "right 1"
+				WriteBitmaps()
+				ReloadArray()
+			else
+				if(Playground$(PlayerPositionLeft,PlayerPositionRight+1)="t")then
+					print "tree"
+					WriteBitmaps()
+					ReloadArray()
+				else
+					print "gras"
+					Playground$(PlayerPositionLeft,PlayerPositionRight)="g"
+					Playground$(PlayerPositionLeft,PlayerPositionRight+1)="p"
+					
+					WriteBitmaps()
+					ReloadArray()	
+				endif
+			endif
+			break
+						
+	
+	default:
+		
+		break
+
+		
+	end switch
+
+	msg$ = message$
+	if (split(msg$, part$(), ":|") > 2) then
+		PartOne$=part$(1)
+		PartTwo$ = part$(2)
+		PartThree$ = part$(3)
+	fi
+	if (split(msg$, part$(), ":|") > 3) then
+		PartFour$ = part$(4)
+	fi
+	if (msg$ <> "") print msg$
+	
+	switch msg$
+	
+	case "Check2DArray:_QuitRequested|"
+		WINDOW CLOSE "Check2DArray"
+		break
+				
+		
+		break	
+	
+	default:
+	
+	end switch
+	
+	if(window count<1) inloop = false
+	sleep 0.05
+wend
+
+SUB ReadoutField()
+	ReadoutFile=open(ProgramFolder$+"/data/playground.field", "r")
+		TEXTEDIT CLEAR "TE:Text"
+		x=0
+		i=0
+		while (not EOF(ReadoutFile))
+			x=x+1				
+			dim Entry$(x)
+			line input #ReadoutFile b$
+			Entry$(x)=b$
+			dim elements$(1)
+				numElements = split(Entry$(x), elements$(),"\n")
+				for i = 1 to numElements
+					TEXTEDIT ADD "TE:Text", elements$(i)+"\n"
+				next i	
+		wend
+	close(ReadoutFile)	
+END SUB
+
+SUB GenerateArray()	
+	TEXTEDIT CLEAR "TE:1-1"
+	TEXTEDIT CLEAR "TE:1-2"
+	TEXTEDIT CLEAR "TE:1-3"
+	TEXTEDIT CLEAR "TE:2-1"
+	TEXTEDIT CLEAR "TE:2-2"
+	TEXTEDIT CLEAR "TE:2-3"
+	TEXTEDIT CLEAR "TE:3-1"
+	TEXTEDIT CLEAR "TE:3-2"
+	TEXTEDIT CLEAR "TE:3-3"		
+	dim Playground$(3,3)
+		readout=open(ProgramFolder$+"/data/playground.field", "r")
+			x=0
+			i=0
+			lines=1
+			while (not EOF(readout))
+				x=x+1
+				y=y+1
+				dim Playground_file$(x)
+				line input #readout b$
+				Playground_file$(x)=b$
+				dim elements$(1)
+					numElements = split(Playground_file$(x), elements$(),":\n")
+					for i = 1 to 3
+						print "i:"+str$(i)
+						Playground$(lines,i)=elements$(i)
+						if(i=3)then
+							lines=lines+1
+							print "lines:"+str$(lines)
+						endif
+					next i
+				wend			
+		close(readout)
+		
+		TEXTEDIT ADD "TE:1-1", Playground$(1,1)
+		TEXTEDIT ADD "TE:1-2", Playground$(1,2)
+		TEXTEDIT ADD "TE:1-3", Playground$(1,3)
+		
+		TEXTEDIT ADD "TE:2-1", Playground$(2,1)
+		TEXTEDIT ADD "TE:2-2", Playground$(2,2)
+		TEXTEDIT ADD "TE:2-3", Playground$(2,3)
+		
+		TEXTEDIT ADD "TE:3-1", Playground$(3,1)
+		TEXTEDIT ADD "TE:3-2", Playground$(3,2)
+		TEXTEDIT ADD "TE:3-3", Playground$(3,3)
+END SUB
+
+SUB ReloadArray()
+	TEXTEDIT CLEAR "TE:1-1"
+	TEXTEDIT CLEAR "TE:1-2"
+	TEXTEDIT CLEAR "TE:1-3"
+	TEXTEDIT CLEAR "TE:2-1"
+	TEXTEDIT CLEAR "TE:2-2"
+	TEXTEDIT CLEAR "TE:2-3"
+	TEXTEDIT CLEAR "TE:3-1"
+	TEXTEDIT CLEAR "TE:3-2"
+	TEXTEDIT CLEAR "TE:3-3"	
+	
+	TEXTEDIT ADD "TE:1-1", Playground$(1,1)
+	TEXTEDIT ADD "TE:1-2", Playground$(1,2)
+	TEXTEDIT ADD "TE:1-3", Playground$(1,3)
+		
+	TEXTEDIT ADD "TE:2-1", Playground$(2,1)
+	TEXTEDIT ADD "TE:2-2", Playground$(2,2)
+	TEXTEDIT ADD "TE:2-3", Playground$(2,3)
+		
+	TEXTEDIT ADD "TE:3-1", Playground$(3,1)
+	TEXTEDIT ADD "TE:3-2", Playground$(3,2)
+	TEXTEDIT ADD "TE:3-3", Playground$(3,3)
+END SUB
+
+SUB WriteBitmaps()
+	i=0
+	x=0
+	lines=1
+	xline=0
+	endofread=1
+	factor=0
+	for i = 1 to 3
+		x=x+1
+		if(endofread=4)then
+			break
+		else
+			if(i=1)then
+				factor=0
+			elseif(i=2)then
+				factor=1	
+			elseif(i=3)then
+				factor=2	
+			endif		
+
+			if(Playground$(lines,x)="p")then
+				draw bitmap 83*factor,83*xline, "gras", "copy", "Canvas"
+				if(model_direction$="up")then
+					if(model_position=1)then
+						draw bitmap 83*factor,83*xline, "kira_back2", "alpha", "Canvas"
+					elseif(model_position=2)then
+						draw bitmap 83*factor,83*xline, "kira_back1", "alpha", "Canvas"
+					endif
+				elseif(model_direction$="left")then
+					if(model_position=1)then
+						draw bitmap 83*factor,83*xline, "kira_left2", "alpha", "Canvas"
+					elseif(model_position=2)then
+						draw bitmap 83*factor,83*xline, "kira_left1", "alpha", "Canvas"
+					endif
+				elseif(model_direction$="down")then
+					if(model_position=1)then
+						draw bitmap 83*factor,83*xline, "kira_front2", "alpha", "Canvas"
+					elseif(model_position=2)then
+						draw bitmap 83*factor,83*xline, "kira_front1", "alpha", "Canvas"
+					endif	
+				elseif(model_direction$="right")then
+					if(model_position=1)then
+						draw bitmap 83*factor,83*xline, "kira_right2", "alpha", "Canvas"
+					elseif(model_position=2)then
+						draw bitmap 83*factor,83*xline, "kira_right1", "alpha", "Canvas"
+					endif
+				endif	
+				if(model_position=1)then
+					model_position=2
+				else
+					model_position=1
+				endif	
+					
+				PlayerPosition$=str$(lines)+":"+str$(x)
+				print "Player Position:"+PlayerPosition$
+			endif
+			if(Playground$(lines,x)="g")then
+				draw bitmap 83*factor,83*xline, "gras", "copy", "Canvas"
+			endif
+			if(Playground$(lines,x)="t")then
+				draw bitmap 83*factor,83*xline, "gras", "copy", "Canvas"
+				draw bitmap 83*factor,83*xline, "tree", "alpha", "Canvas"
+			endif
+			if(x=3)then
+				x=0
+				i=0
+			    	xline=xline+1
+			    	if(lines=3)then
+			    	else
+					lines=lines+1
+				endif
+				endofread=endofread+1	
+			endif			
+		endif						
+	next i
+END SUB
+
+SUB ReadoutSource()
+	ReadoutFile=open(ProgramFolder$+"/check_2d_array.yab", "r")
+		TEXTEDIT CLEAR "TE:Source"
+		x=0
+		i=0
+		while (not EOF(ReadoutFile))
+			x=x+1				
+			dim Entry$(x)
+			line input #ReadoutFile b$
+			Entry$(x)=b$
+			dim elements$(1)
+				numElements = split(Entry$(x), elements$(),"\n")
+				for i = 1 to numElements
+					TEXTEDIT ADD "TE:Source", elements$(i)+"\n"
+				next i	
+		wend
+		close(ReadoutFile)	
+END SUB		
+
+SUB SyntaxHighlightning()
+	local handle
+	handle=0
+	handle = open(ProgramFolder$+"/data/color-blue")
+	if(handle) then
+		while(not eof(handle))
+			line input #handle tmp$
+			textedit color "TE:Source", "color1", tmp$
+		wend
+		close(handle)
+	endif
+		
+	handle = open(ProgramFolder$+"/data/color-red")
+	if(handle) then
+		while(not eof(handle))
+			line input #handle tmp$
+			textedit color "TE:Source", "color2", tmp$
+		wend
+		close(handle)
+	endif
+	
+	handle = open(ProgramFolder$+"/data/color-green")
+	if(handle) then
+		while(not eof(handle))
+			line input #handle tmp$
+			textedit color "TE:Source", "color3", tmp$
+		wend
+		close(handle)
+	endif
+	
+	handle = open(ProgramFolder$+"/data/color-char")
+	if(handle) then
+		while(not eof(handle))
+			line input #handle tmp$
+			textedit color "TE:Source", "char-color", tmp$
+		wend
+		close(handle)
+	endif
+END SUB
